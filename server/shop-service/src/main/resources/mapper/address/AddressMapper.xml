@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.address.mapper.AddressDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <insert id="addUserAddress" parameterType="cn.kt.mall.shop.address.entity.AddressEntity" flushCache="true">
+        INSERT INTO tb_shop_user_address(id, userId, country, province, provinceValue,city, cityValue,county, countyValue,detailAddress,
+                      recvName, recvMobile, zipcode, `def`)
+         VALUES (#{id}, #{userId}, #{country}, #{province},#{provinceValue}, #{city}, #{cityValue},#{county}, #{countyValue},#{detailAddress},
+                  #{recvName}, #{recvMobile}, #{zipcode}, #{def})
+    </insert>
+
+    <delete id="delUserAddress" parameterType="string" flushCache="true">
+        DELETE FROM tb_shop_user_address WHERE id=#{id}
+    </delete>
+
+    <update id="updateUserAddress" parameterType="cn.kt.mall.shop.address.entity.AddressEntity" flushCache="true">
+        UPDATE tb_shop_user_address
+        SET country=#{country}, province=#{province},provinceValue=#{provinceValue}, city=#{city}, cityValue=#{cityValue},county=#{county},  countyValue=#{countyValue},detailAddress=#{detailAddress},
+            recvName=#{recvName}, recvMobile=#{recvMobile}, zipcode=#{zipcode}, `def`=#{def}
+        WHERE id=#{id} AND userId=#{userId}
+    </update>
+
+    <update id="cancelUserDef" parameterType="string" flushCache="true">
+        UPDATE tb_shop_user_address SET `def`= '' WHERE userId=#{userId}
+    </update>
+
+    <update id="updateUserDef" parameterType="string" flushCache="true">
+        UPDATE tb_shop_user_address SET `def`='0' WHERE id=#{id} AND userId=#{userId}
+    </update>
+
+    <select id="getUserAddressById" resultType="cn.kt.mall.shop.address.entity.AddressEntity">
+        SELECT * FROM tb_shop_user_address WHERE id=#{id} and userId = #{userId}
+    </select>
+
+    <select id="getUserAddress" parameterType="string" resultType="cn.kt.mall.shop.address.vo.AddressVO">
+	    select 
+			a.*,p.Province_Name as provinceValue,
+		    c.City_Name as cityValue,
+		    d.district_Name as countyValue
+		from tb_shop_user_address a
+		left join bbt_system_province p on p.sid = a.province
+		left join bbt_system_city c on c.Pro_ID = p.sid and c.sid = a.city
+		left join bbt_system_district d on d.city_ID = c.sid and d.sid = a.county
+        WHERE a.userId=#{userId}
+    </select>
+
+    <!--<select id="listAddressByIds" resultType="cn.kt.mall.shop.address.vo.AddressVO">
+	    select 
+			a.*,p.Province_Name as provinceValue,
+		    c.City_Name as cityValue,
+		    d.district_Name as countyValue
+		from tb_shop_user_address a
+		left join bbt_system_province p on p.sid = a.province
+		left join bbt_system_city c on c.Pro_ID = p.sid and c.sid = a.city
+		left join bbt_system_district d on d.city_ID = c.sid and d.sid = a.county
+        WHERE a.id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        <if test="userId != null and userId != ''">
+            and a.userId = #{userId}
+        </if>
+    </select>-->
+    <select id="listAddressByIds" resultType="cn.kt.mall.shop.address.vo.AddressVO">
+        select
+        *
+        from tb_shop_user_address a
+
+        WHERE a.id in
+        <foreach collection="ids" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+        <if test="userId != null and userId != ''">
+            and a.userId = #{userId}
+        </if>
+    </select>
+
+</mapper>

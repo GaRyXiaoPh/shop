@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.release.repository.ReleaseDao">
+
+    <update id="callBasePopcRelease" >
+        <foreach collection="list" item="item" index="index" open="" separator=";">
+                call base_popc_release(#{item.v_userId},#{item.v_assetType})
+        </foreach>
+
+    </update>
+
+    <select id="callBasePointRelease">
+        <foreach collection="list" item="item" index="index" separator=";">
+            call base_point_release(#{item.v_userId},#{item.v_couponId},#{item.v_assetType})
+        </foreach>
+    </select>
+
+    <select id="callTradePopcRelease" >
+        <foreach collection="list" item="item" index="index" separator=";">
+            call trade_popc_release(#{item.v_id},#{item.v_couponId},#{item.v_assetType})
+        </foreach>
+    </select>
+
+    <select id="callTradePointRelease" >
+        <foreach collection="list" item="item" index="index" separator=";">
+            call trade_point_release(#{item.v_id},#{item.v_couponId},#{item.v_assetType})
+        </foreach>
+    </select>
+
+</mapper>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.offline.dao.RecommendDao">
+    <!--根据手机号查询商圈商户信息-->
+    <select id="getRecommendList"  resultType="cn.kt.mall.offline.entity.RecommendEntity">
+       select
+          t.mobile,
+          t.username,
+          t.avatar
+       from tb_user t
+       left join tb_shop_shop s on t.id = s.userId
+       where t.referrer = #{userId}
+       <if test="flag != null and flag==1">
+           and s.id is not null
+       </if>
+        <if test="flag != null and flag==2">
+            and s.id is null
+        </if>
+    </select>
+
+    <!--查询每个用户的推荐奖励-->
+    <select id="getRecommendReward" resultType="double">
+        select ifnull(sum(t.amountLem),0) AS amountLem from tb_user_statement t where t.`status` = 5 and t.toUserId = #{userId}
+    </select>
+</mapper>

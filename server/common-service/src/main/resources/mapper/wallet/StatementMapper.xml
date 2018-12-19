@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.common.wallet.mapper.StatementDAO">
+
+    <!--<cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+
+    <insert id="add" parameterType="cn.kt.mall.common.wallet.entity.StatementEntity" flushCache="true">
+	INSERT INTO tb_user_statement(id, userId, currency,
+	availableBefore, availableAfter,availableChange,
+	reservedBefore, reservedAfter,reservedChange,
+	tradeType,referenceId,status,mark,createTime
+	)
+	VALUES (#{id},#{userId},#{currency},
+	#{availableBefore},#{availableAfter},#{availableChange},
+	#{reservedBefore},#{reservedAfter},#{reservedChange},
+	#{tradeType},#{referenceId},#{status},#{mark},#{createTime}
+	)
+</insert>
+	<insert id="addStatementGive" parameterType="cn.kt.mall.common.wallet.entity.StatementEntity" flushCache="true">
+		INSERT INTO tb_user_statement(id, userId, currency,
+		availableBefore, availableAfter,availableChange,
+		reservedBefore, reservedAfter,reservedChange,
+		tradeType,referenceId,status,mark,createTime,
+		goodId
+		)
+		VALUES (#{id},#{userId},#{currency},
+		#{availableBefore},#{availableAfter},#{availableChange},
+		#{reservedBefore},#{reservedAfter},#{reservedChange},
+		#{tradeType},#{referenceId},#{status},#{mark},#{createTime},
+		#{goodId}
+		)
+	</insert>
+
+    <select id="getStatementCount" parameterType="string" resultType="int">
+        SELECT count(1) as cnt FROM tb_user_statement WHERE (fromUserId=#{userId} or toUserId=#{userId})
+    </select>
+    
+    <select id="getStatement" resultType="cn.kt.mall.common.wallet.entity.StatementEntity">
+        SELECT * FROM tb_user_statement WHERE (fromUserId=#{userId} or toUserId=#{userId})
+        ORDER BY createTime,startTime DESC limit #{offset},#{pageSize}
+    </select>
+    
+    <update id="updateStatement" flushCache="true">
+    	update tb_user_statement set status = ${status}
+    	<if test="hash != null and hash != ''">,hash = #{hash}</if>
+    	where id = #{id}
+    </update>
+    
+    <update id="updateByHash" flushCache="true">
+    	update tb_user_statement set status = ${status}
+    	where hash = #{hash}
+    </update>
+    
+    <select id="getById" resultType="cn.kt.mall.common.wallet.entity.StatementEntity">
+    	SELECT * FROM tb_user_statement WHERE id = #{id}
+    </select>
+
+	<select id="getStatementListByStartDate" resultType="cn.kt.mall.common.wallet.entity.StatementEntity">
+		select * from tb_user_statement where startTime <![CDATA[ <= ]]> #{startTime} and status = 1
+	</select>
+	
+	<select id="countStatement" resultType="cn.kt.mall.common.wallet.vo.CountStatementVO">
+		select 
+			sum(amountLem) as totalLem,DATE_FORMAT(createTime,'%Y-%m') as month
+		from tb_user_statement where toShopId = #{shopId}
+		group by month
+		having month <![CDATA[ > ]]> #{startMonth} and month <![CDATA[ <= ]]> #{endMonth}
+	</select>
+	
+	<select id="countStatementByDay" resultType="cn.kt.mall.common.wallet.vo.CountStatementVO">
+		select 
+			sum(amountLem) as totalLem,DATE_FORMAT(createTime,'%Y-%m-%d') as month
+		from tb_user_statement where toShopId = #{shopId}
+		group by month
+		having month <![CDATA[ >= ]]> #{startMonth} and month <![CDATA[ <= ]]> #{endMonth}
+	</select>
+	
+	<select id="countByStatementLem" resultType="java.math.BigDecimal">
+		select sum(amountLem) from tb_user_statement where 1=1
+		<if test="shopId != null and shopId != ''">
+			and toShopId = #{shopId}
+		</if>
+	</select>
+	
+	<select id="countByUserIdAndStatus" resultType="java.math.BigDecimal">
+		select sum(amountLem) from tb_user_statement where toUserId = #{userId} and tradeType = #{tradeType}
+	</select>
+
+	<select id="getUserStatementDetailList"  resultType="cn.kt.mall.common.wallet.entity.StatementEntity">
+		SELECT
+			*
+		FROM
+			tb_user_statement
+		WHERE
+			userId = #{userId}
+		AND tradeType IN (10, 11)
+		AND currency = 'popc'
+		order by createTime DESC
+	</select>
+	<select id="getuserCouponConsumeDetailList"  resultType="cn.kt.mall.common.wallet.entity.StatementEntity">
+		SELECT
+		*
+		FROM
+			tb_user_statement
+		WHERE
+			userId = #{userId}
+		AND tradeType IN (10, 11)
+		AND currency = 'popc'
+		order by createTime DESC
+	</select>
+	<select id="getUserAssetBaseReleaseStatementDetailList"  resultType="cn.kt.mall.common.wallet.entity.StatementEntity">
+		SELECT
+		*
+		FROM
+		tb_user_statement
+		WHERE
+		userId = #{userId}
+		AND tradeType = 24
+		AND currency = 'popc'
+		order by createTime DESC
+	</select>
+	<select id="getUserStatementTransferDetailList"  resultType="cn.kt.mall.common.wallet.entity.StatementEntity">
+		SELECT
+		*
+		FROM
+		tb_user_statement
+		WHERE
+		userId = #{userId}
+		AND tradeType IN (1, 13,15)
+		AND currency = 'popc'
+		order by createTime DESC
+	</select>
+	<!-- 查询我的余额明细-->
+	<select id="getMyAssetStatementList" resultType="cn.kt.mall.common.wallet.entity.StatementEntity">
+		SELECT
+		*
+		FROM
+		tb_user_statement us
+		WHERE
+		us.userId =  #{userId,jdbcType=VARCHAR}
+		and currency = 'point'
+		and status = '2'
+		order by us.createTime DESC
+	</select>
+	<!-- 查询基础优惠券释放总数-->
+	<select id="getAssetEntityBaseReleaseAmount" resultType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+		SELECT
+		IFNULL(sum(us.availableChange), 0) AS releaseAmountBase
+		FROM
+		tb_user_statement us
+		WHERE
+		us.userId =  #{userId,jdbcType=VARCHAR}
+		and currency = 'popc'
+		and tradeType = '24'
+	</select>
+</mapper>

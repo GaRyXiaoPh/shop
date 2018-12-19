@@ -1,0 +1,1 @@
+alter table tb_user_extract_coupon_log add arriveAccount varchar(36) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '到账账户'

@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.management.admin.dao.FundDAO">
+
+   <!-- <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+    <select id="getFundList" parameterType="cn.kt.mall.management.admin.vo.fund.FundReqVO"
+            resultType="cn.kt.mall.management.admin.vo.fund.FundRespVO">
+        SELECT
+        l.id as id,
+        l.userId as userId,
+        l.createTime as createTime,
+        l.operationType as operationType,
+        s.shopLevel as shopLevel,
+        u.trueName as trueName,
+        u.mobile as mobile,
+        l.rechargeAmount as rechargeAmount,
+        l.status as status,
+        l.remarks as remarks
+        FROM
+        tb_user_recharge_log l
+        LEFT JOIN tb_user u ON u.id = l.rechargeUser
+        LEFT JOIN tb_shop_shop s ON s.userId = l.rechargeUser
+        where 1=1
+        <if test="operationType!=null and operationType != ''">
+            and l.operationType=#{operationType}
+        </if>
+        <if test="beginTime != null and beginTime != ''">
+            and l.createTime <![CDATA[ >= ]]> #{beginTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and l.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="status != null and status != ''">
+            and l.status=#{status}
+        </if>
+        <if test="mobile !=null and mobile !=''">
+            and u.mobile like concat('%',#{mobile},'%')
+        </if>
+        ORDER BY l.createTime DESC
+    </select>
+</mapper>

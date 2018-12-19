@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/common/common.iml" filepath="$PROJECT_DIR$/common/common.iml" />
+      <module fileurl="file://$PROJECT_DIR$/common-service/common-service.iml" filepath="$PROJECT_DIR$/common-service/common-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/im-service/im-service.iml" filepath="$PROJECT_DIR$/im-service/im-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kt.iml" filepath="$PROJECT_DIR$/kt.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kt-front/kt-front.iml" filepath="$PROJECT_DIR$/kt-front/kt-front.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kt-management/kt-management.iml" filepath="$PROJECT_DIR$/kt-management/kt-management.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kt-offline/kt-offline.iml" filepath="$PROJECT_DIR$/kt-offline/kt-offline.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kt-open/kt-open.iml" filepath="$PROJECT_DIR$/kt-open/kt-open.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kt-shop/kt-shop.iml" filepath="$PROJECT_DIR$/kt-shop/kt-shop.iml" />
+      <module fileurl="file://$PROJECT_DIR$/kt-task/kt-task.iml" filepath="$PROJECT_DIR$/kt-task/kt-task.iml" />
+      <module fileurl="file://$PROJECT_DIR$/mq-util/mq-util.iml" filepath="$PROJECT_DIR$/mq-util/mq-util.iml" />
+      <module fileurl="file://$PROJECT_DIR$/offline-service/offline-service.iml" filepath="$PROJECT_DIR$/offline-service/offline-service.iml" />
+      <module fileurl="file://$PROJECT_DIR$/shop-service/shop-service.iml" filepath="$PROJECT_DIR$/shop-service/shop-service.iml" />
+    </modules>
+  </component>
+</project>

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.common.wallet.mapper.UnfreezeDAO">
+
+    <!-- 查询冻结列表长度 -->
+    <select id="getUnfreezeCount" resultType="int">
+        select count(1) from tb_unfreeze_log
+        where 1=1
+        <if test="startDate != null and startDate != ''">
+            and unfreezeDate <![CDATA[ >= ]]> #{startDate}
+        </if>
+        <if test="endDate != null  and endDate != ''">
+            and unfreezeDate <![CDATA[ <= ]]> #{endDate}
+        </if>
+    </select>
+
+    <!--查询冻结列表列表-->
+    <select id="unfreezeList" resultType="cn.kt.mall.common.wallet.vo.UnfreezeVO">
+        select id,concat(truncate(unfreezeRatio,2),'%') as 'unfreezeRatio',
+        profitCashTotal,unfreezeCashTotal,unfreezeDate,createTime from tb_unfreeze_log
+        where 1=1
+        <if test="startDate != null and startDate != ''">
+            and unfreezeDate <![CDATA[ >= ]]> #{startDate}
+        </if>
+        <if test="endDate != null and endDate != ''">
+            and unfreezeDate <![CDATA[ <= ]]> #{endDate}
+        </if>
+        order by unfreezeDate desc
+        Limit #{offset},#{pageSize}
+
+    </select>
+
+    <update id="addUnfreezeLog" parameterType="cn.kt.mall.common.wallet.vo.UnfreezeVO">
+        INSERT INTO tb_unfreeze_log VALUES(#{id}, #{userId}, 'popc', #{type}, #{unfreezeRatio},#{profitCashTotal},#{unfreezeCashTotal},#{unfreezeCash},#{unfreezeDate},NOW());
+    </update>
+
+</mapper>

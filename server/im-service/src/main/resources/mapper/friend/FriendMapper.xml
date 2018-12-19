@@ -1,0 +1,293 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.im.friend.mapper.FriendDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+
+    <select id="getFriendshipListCount" parameterType="string" resultType="int">
+        SELECT count(1) as cnt FROM tb_im_friend t1
+        WHERE
+            t1.userId = #{userId}
+            <if test="hates != null and hates.length > 0">
+                AND t1.friendId NOT IN
+                <foreach item="item" index="index" collection="hates" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+    </select>
+    <!--获取用户好友列表(除黑名单)-->
+    <select id="getFriendshipList" parameterType="string" resultType="cn.kt.mall.im.friend.vo.FriendshipVO">
+        <!--SELECT t2.id as userId, t2.`username`, t2.nick, t3.remark_name, t2.mobile, t2.avatar, IFNULL(t1.star, '0') as star
+        FROM tb_im_friend t1
+        LEFT JOIN tb_user t2 ON t1.friendId = t2.id
+        LEFT JOIN tb_im_user_remark t3 ON (t2.id = t3.user_id and t3.creator = #{userId})
+        WHERE
+            t1.userId = #{userId}
+            <if test="hates != null and hates.length > 0">
+                AND t1.friendId NOT IN
+                <foreach item="item" index="index" collection="hates" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+        ORDER BY
+            t2.`username`,
+            t3.remark_name
+        LIMIT #{offset},#{pageSize}-->
+    </select>
+
+    <!--获取用户好友列表(除黑名单和不需要的好友)-->
+    <select id="getFriendsFilter" resultType="cn.kt.mall.im.friend.vo.FriendshipVO">
+
+        SELECT
+            *
+        FROM
+            (
+                SELECT
+                    t2.id AS userId,
+                    t2.username,
+                    t2.nick,
+                    t2.mobile,
+                    t2.avatar,
+                    IFNULL(t1.star, '0') AS star,
+                    t3.remark_name AS remarkName,
+                    t4.hateId,
+                    CASE
+                WHEN t4.hateId IS NOT NULL THEN
+                    1
+                ELSE
+                    0
+                END AS isHate
+                FROM
+                    tb_im_friend t1
+                INNER JOIN tb_user t2 ON t1.friendId = t2.id
+                LEFT JOIN tb_im_user_remark t3 ON t2.id = t3.friend_id
+                AND t3.user_id = t1.userId
+                LEFT JOIN tb_im_hate_user t4 ON t1.userId = t4.userId
+                AND t2.id = t4.hateId
+                WHERE
+                    t1.userId = #{userId}
+            ) t
+        WHERE
+            t.isHate = 0
+        <if test="friend != null and friend.length > 0">
+            AND t.userId NOT IN
+            <foreach item="item" index="index" collection="friend" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+
+    <!--获取朋友列表-->
+    <select id="getFriendsList"  resultType="cn.kt.mall.im.friend.vo.FriendshipVO">
+        SELECT
+            *
+        FROM
+            (
+                SELECT
+                    t2.id AS userId,
+                    t2.username,
+                    t2.nick,
+                    t2.mobile,
+                    t2.avatar,
+                    IFNULL(t1.star, '0') AS star,
+                    t3.remark_name AS remarkName,
+                    t4.hateId,
+                    CASE
+                WHEN t4.hateId IS NOT NULL THEN
+                    1
+                ELSE
+                    0
+                END AS isHate
+                FROM
+                    tb_im_friend t1
+                INNER JOIN tb_user t2 ON t1.friendId = t2.id
+                LEFT JOIN tb_im_user_remark t3 ON t2.id = t3.friend_id
+                AND t3.user_id = t1.userId
+                LEFT JOIN tb_im_hate_user t4 ON t1.userId = t4.userId
+                AND t2.id = t4.hateId
+                WHERE
+                    t1.userId = #{userId}
+            ) t
+        WHERE
+            1 = 1
+        AND t.isHate = #{isHate}
+
+    </select>
+
+
+    <insert id="addFriendInvitation" parameterType="cn.kt.mall.im.friend.entity.FriendInvitationEntity" flushCache="true">
+        REPLACE INTO tb_im_friend_invitation (
+            id,
+            userId,
+            friendId,
+            message,
+            STATUS,
+            createTime,
+            lastTime
+        )
+        VALUES
+            (#{id}, #{userId}, #{friendId}, #{message}, '0', NOW(), NOW())
+    </insert>
+
+    <update id="updateFriendInvitationStatus" flushCache="true">
+        UPDATE tb_im_friend_invitation SET `status`=#{status}, lastTime = NOW()
+       		<if test="message != null and message != ''">,message=#{message}</if>
+        WHERE userId=#{userId} AND friendId=#{friendId}
+    </update>
+
+    <select id="getFriendInvitation" parameterType="string" resultType="cn.kt.mall.im.friend.entity.FriendInvitationEntity">
+        SELECT * FROM tb_im_friend_invitation WHERE userId = #{userId} AND friendId = #{friendId}
+    </select>
+
+    <select id="getMyFriendInvitationCount" parameterType="string" resultType="int">
+        SELECT count(1) as cnt FROM tb_im_friend_invitation WHERE friendId=#{userId}
+    </select>
+
+    <select id="getMyFriendInvitation" resultType="cn.kt.mall.im.friend.entity.FriendInvitationEntity">
+        SELECT * from tb_im_friend_invitation WHERE friendId=#{userId} ORDER BY lastTime DESC LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <!--添加好友-->
+    <insert id="addFriendship" parameterType="cn.kt.mall.im.friend.entity.FriendEntity" flushCache="true">
+        INSERT INTO tb_im_friend (
+            id,
+            userId,
+            friendId,
+            star,
+            invisibleFriend,
+            invisibleMe,
+            createTime
+        )
+        VALUES
+        <foreach collection="list" item="item" index="index" separator="," >
+            (#{item.id},#{item.userId},#{item.friendId}, '0', '0', '0', NOW())
+        </foreach>
+    </insert>
+
+    <!--添加名称备注-->
+    <insert id="addUserRemark" parameterType="cn.kt.mall.im.friend.entity.UserRemarkEntity">
+        INSERT INTO tb_im_user_remark (
+        id,
+        user_id,
+        friend_id,
+        remark_name
+        )
+        VALUES(
+        #{id},
+        #{userId},
+        #{friendId},
+        #{remarkName}
+        )
+    </insert>
+
+    <!--修改备注-->
+    <update id="updateRemark" parameterType="cn.kt.mall.im.friend.entity.UserRemarkEntity">
+        update tb_im_user_remark  set remark_name = #{remarkName} where user_id = #{userId} and friend_id = #{friendId}
+    </update>
+
+    <!--判断是否备注-->
+    <select id="getRemark" parameterType="cn.kt.mall.im.friend.entity.UserRemarkEntity" resultType="int">
+        select count(1) from tb_im_user_remark t where t.user_id = #{userId} and t.friend_id = #{friendId}
+    </select>
+
+    <!--删除备注-->
+    <delete id="deleteRemark">
+        delete from tb_im_user_remark  where user_id = #{userId} and friend_id= #{friendId}
+    </delete>
+
+    <delete id="deleteFriend" parameterType="string" flushCache="true">
+        DELETE FROM tb_im_friend WHERE (userId = #{userId} AND friendId = #{friendId}) OR (userId = #{friendId} AND friendId = #{userId})
+    </delete>
+
+    <update id="updateFriend" parameterType="cn.kt.mall.im.friend.vo.FriendOprVO" flushCache="true">
+        UPDATE tb_im_friend SET
+        <if test='star == "0" or star == "1"'>
+            star = #{star},
+        </if>
+        <if test='invisibleFriend == "0" or invisibleFriend == "1"'>
+            invisibleFriend = #{invisibleFriend},
+        </if>
+        <if test='invisibleMe == "0" or invisibleMe == "1"'>
+            invisibleMe = #{invisibleMe},
+        </if>
+        createTime = createTime
+        WHERE userId = #{userId} and friendId = #{friendId}
+    </update>
+
+    <select id="isFriend"  resultType="int">
+        SELECT count(1) as isFriend from tb_im_friend where userId = #{userId} and friendId = #{friendId}
+    </select>
+
+    <select id="getFriendUserIds" parameterType="string" resultType="string">
+        SELECT friendId from tb_im_friend where userId = #{userId}
+    </select>
+
+    <select id="getVisibleFriendUserIds" parameterType="string" resultType="string">
+        <!-- 自己的“不看他朋友圈”为0 -->
+        SELECT friendId from
+        (select friendId, MAX(1) as num from tb_im_friend where userId = #{userId} and invisibleFriend = '0' GROUP BY friendId
+        UNION ALL
+        select userId as friendId, MAX(1) as num from tb_im_friend where friendId = #{userId} and invisibleMe = '0' GROUP BY userId) t
+        GROUP BY friendId
+        HAVING SUM(num) > 1
+        <!-- 对方的“不让他看朋友圈”为0 -->
+    </select>
+    
+    <select id="canVisibleFriendMoment" parameterType="string" resultType="boolean">
+        <!-- 自己的“不看他朋友圈”为0 -->
+        select IF(SUM(t.num) = 11, true, false) as visible from
+        (select MAX(1) as num from tb_im_friend where userId = #{currentId} and friendId = #{friendId} and invisibleFriend = '0'
+        UNION
+        select MAX(10) as num from tb_im_friend where userId = #{friendId} and friendId = #{currentId} and invisibleMe = '0') t
+        <!-- 对方的“不让他看朋友圈”为0 -->
+    </select>
+
+    <select id="getEntityByUserAndFriend" parameterType="string" resultType="cn.kt.mall.im.friend.entity.FriendEntity">
+        SELECT * FROM tb_im_friend WHERE userId = #{userId} AND friendId = #{friendId} LIMIT 0, 1
+    </select>
+
+    <!--查询群好友信息-->
+    <select id="getGroupMemberList" resultType="cn.kt.mall.im.friend.vo.FriendshipVO">
+           select
+             t.userId,
+             u.username,
+             u.mobile,
+             t.isManager,
+             u.avatar,
+             r.remark_name AS remarkName,
+             t.nickname AS groupNickName,
+             u.nick
+    from tb_im_group_member t
+    inner join tb_user u on t.userId = u.id
+    left join (select * from tb_im_user_remark where user_id = #{userId}) r on t.userId = r.friend_id
+    where t.groupId = #{groupId}
+    group by t.userId
+    </select>
+
+    <select id="getFriendMessage" resultType="cn.kt.mall.im.friend.vo.FriendshipVO">
+        SELECT
+            u.id AS userId,
+            u.username,
+            u.mobile,
+            u.nick,
+            u.avatar,
+            t.star,
+            r.remark_name AS remarkName
+        FROM
+            tb_im_friend t
+        LEFT JOIN tb_user u ON t.friendId = u.id
+        LEFT JOIN tb_im_user_remark r ON t.userId = r.user_id
+        AND t.friendId = r.friend_id
+        WHERE
+            t.userId = #{userId}
+        AND
+            t.friendId = #{friendId}
+        limit 0,1
+    </select>
+
+    <select id="getUserMessage" parameterType="string" resultType="cn.kt.mall.im.friend.vo.FriendshipVO">
+        select id AS userId , username,mobile,nick,avatar from tb_user where id = #{id}
+    </select>
+
+</mapper>

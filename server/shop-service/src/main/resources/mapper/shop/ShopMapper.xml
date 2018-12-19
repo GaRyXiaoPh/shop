@@ -1,0 +1,731 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.shop.mapper.ShopDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <select id="getShopEntityByShopId" parameterType="string" resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        SELECT * FROM tb_shop_shop WHERE id=#{shopId}
+    </select>
+
+    <select id="getShopIdByShopNo" parameterType="string" resultType="java.lang.String">
+        SELECT id FROM tb_shop_shop WHERE shopNo=#{shopNo}
+    </select>
+
+    <select id="listShopByIds" resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        SELECT * FROM tb_shop_shop WHERE id in
+        <foreach collection="shopIds" item="shopId" open="(" close=")" separator=",">
+            #{shopId}
+        </foreach>
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+    </select>
+
+    <select id="listCollectShopByIds" resultType="cn.kt.mall.shop.collect.vo.ShopCollectVO">
+        select
+        t.id,t.shopType,t.shopName,t.shopPoint,t.avatar,t.address,y.companyType as shopTagValue
+        from tb_shop_shop t
+        left join tb_shop_authdata y on y.shopId = t.id
+        WHERE t.id in
+        <foreach collection="shopIds" item="shopId" open="(" close=")" separator=",">
+            #{shopId}
+        </foreach>
+    </select>
+
+    <select id="getMyShopEntity" parameterType="string" resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        SELECT * FROM tb_shop_shop WHERE userId=#{userId}
+    </select>
+
+    <select id="getMyOnLineShopEntity" resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        SELECT * FROM tb_shop_shop WHERE userId=#{userId} AND shopType='2'
+    </select>
+
+    <select id="getMyOffLineShopEntity" resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        SELECT * FROM tb_shop_shop WHERE userId=#{userId} AND shopType='1'
+    </select>
+
+    <insert id="addShopEntity" parameterType="cn.kt.mall.shop.shop.entity.ShopEntity" flushCache="true">
+        INSERT INTO tb_shop_shop(id, userId, shopNo, shopName, shopType,shopTag,shopLevel,shopPoint,shopConsume, shopAddress, name, mobile, email,address, status, avatar,whetherLogistics,whetherPay,shopRank,shopSalesAmount)
+        VALUES (#{id}, #{userId}, #{shopNo}, #{shopName}, #{shopType}, #{shopTag}, #{shopLevel}, #{shopPoint},#{shopConsume}, #{shopAddress}, #{name}, #{mobile}, #{email},#{address}, #{status}, #{avatar},#{whetherLogistics},#{whetherPay},#{shopRank},#{shopSalesAmount})
+    </insert>
+
+    <update id="updateSelective" parameterType="cn.kt.mall.shop.shop.entity.ShopEntity" flushCache="true">
+        update tb_shop_shop
+        <set>
+            <if test="shopName != null and shopName != ''">
+                shopName = #{shopName},
+            </if>
+            <if test="shopType != null and shopType != ''">
+                shopType = #{shopType},
+            </if>
+            <if test="shopTag != null and shopTag != ''">
+                shopTag = #{shopTag},
+            </if>
+            <if test="shopAddress != null and shopAddress != ''">
+                shopAddress = #{zipcode},
+            </if>
+            <if test="name != null and name != ''">
+                name = #{name},
+            </if>
+            <if test="mobile != null and mobile != ''">
+                mobile = #{mobile},
+            </if>
+            <if test="address != null and address != ''">
+                address = #{address},
+            </if>
+            <if test="email != null and email != ''">
+                email = #{email},
+            </if>
+            <if test="status != null and status != ''">
+                status = #{status},
+            </if>
+            <if test="shopLevel != null and shopLevel != ''">
+                shopLevel = #{shopLevel},
+            </if>
+            <if test="feightRate != null">
+                feightRate = #{feightRate},
+            </if>
+            <if test="mark != null and mark != ''">
+                mark = #{mark},
+            </if>
+
+            <if test="whetherLogistics != null and whetherLogistics != ''">
+                whetherLogistics = #{whetherLogistics},
+            </if>
+
+            <if test="whetherPay != null and whetherPay != ''">
+                whetherPay = #{whetherPay},
+            </if>
+        </set>
+        where id = #{id}
+    </update>
+    <update id="updateShopRankAndConsume" parameterType="cn.kt.mall.shop.shop.entity.ShopEntity" flushCache="true">
+        update tb_shop_shop set shopRank = shopRank + #{shopRank},shopConsume = #{shopConsume} where id = #{id} and shopRank = #{shopRankBefore}
+    </update>
+    <update id="updateShopConsume" parameterType="cn.kt.mall.shop.shop.entity.ShopEntity" flushCache="true">
+        update tb_shop_shop set shopConsume = shopConsume + #{shopConsume} where id = #{id}
+    </update>
+    <insert id="addShopAuthdataEntity" parameterType="cn.kt.mall.shop.shop.entity.ShopAuthdataEntity" flushCache="true">
+        INSERT INTO tb_shop_authdata
+        (
+            id, userId, shopId, company, province, city, county, detailAddress, addressLon, addressLat,
+            companyType, companyMobile, companyEmail, companyImg, businessNo,
+            businessScope, businessImg1, businessImg2, businessImg3, businessImg4, businessImg5, addressNo
+        )
+        VALUES
+        (
+            #{id}, #{userId}, #{shopId}, #{company}, #{province}, #{city}, #{county}, #{detailAddress}, #{addressLon}, #{addressLat},
+            #{companyType}, #{companyMobile}, #{companyEmail}, #{companyImg}, #{businessNo},
+            #{businessScope}, #{businessImg1}, #{businessImg2}, #{businessImg3}, #{businessImg4}, #{businessImg5}, #{addressNo}
+        )
+    </insert>
+
+    <select id="getMyShopAuthdataEntity" parameterType="string"
+            resultType="cn.kt.mall.shop.shop.entity.ShopAuthdataEntity">
+        SELECT * FROM tb_shop_authdata WHERE shopId=#{shopId} limit 0,1
+    </select>
+
+    <select id="listAuthData" resultType="cn.kt.mall.shop.shop.vo.ShopAuthManageVO">
+        select t.id,t.userId,u.nick,u.username as userName,t.createTime,t.status,t.shopTag,t.shopName,
+        t.mobile,t.address,t.shopType
+        from tb_shop_shop t
+        left join tb_user u on t.userId = u.id
+        where 1=1
+        <if test="userName != null and userName != ''">and u.username = #{userName}</if>
+        <if test="shopType != null and shopType != ''">and t.shopType = #{shopType}</if>
+        <if test="status != null and status != ''">and t.status = #{status}</if>
+        <if test="startTime != null">and t.createTime <![CDATA[ >= ]]> #{startTime}</if>
+        <if test="endTime != null">and t.createTime <![CDATA[ <= ]]> #{endTime}</if>
+    </select>
+
+    <select id="countByType" parameterType="string" resultType="int">
+        select count(1) from
+        (select
+        (select count(1) from tb_shop_shop s where s.userId = t.id
+        <if test="shopType == '1'.toString() or shopType == '2'.toString()">
+            and s.shopType = #{shopType}
+        </if>
+        ) as shopNum
+        from tb_user t) o
+        where o.shopNum =
+        <choose>
+            <when test="shopType == '1'.toString() or shopType == '2'.toString()">1</when>
+            <when test="shopType == '3'.toString()">2</when>
+            <when test="shopType == '0'.toString()">0</when>
+        </choose>
+    </select>
+
+    <!-- 根据用户查询shopId-->
+    <select id="getShopListByUserId" resultType="java.lang.String">
+        select
+        t.id
+        from tb_shop_shop t
+        WHERE t.userId in
+        <foreach collection="userIds" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getUserIdListByShopIdList" resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        select
+        t.id,t.userId
+        from tb_shop_shop t
+        WHERE t.id in
+        <foreach collection="shopIds" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+
+    <select id="searchShops" resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        SELECT
+        ss.*,
+        CASE ss.id
+        WHEN #{shopId} THEN
+        1
+        ELSE
+        0
+        END AS pidFlag
+        from
+        (select * from tb_shop_shop ss where ss.`status` = 1
+        <if test="shopName !=null and shopName != ''">
+            and ss.shopName LIKE concat('%',#{shopName},'%')
+        </if>)ss
+        order by pidFlag DESC
+    </select>
+
+    <select id="getShopByShopNoAndLevel"
+            resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        SELECT t.id as id, t.userId as userId, t.shopNo as shopNo, t.shopName as shopName, t.shopType as shopType
+        ,t.shopTag as shopTag ,
+        t.shopLevel as shopLevel ,t.shopPoint as shopPoint , t.shopAddress as shopAddress , t.name
+        as name,
+        r.mobile as mobile, t.email as email ,t.address as address , t.status as status , t.avatar as
+        avatar,t.whetherLogistics as whetherLogistics,t.whetherPay as whetherPay ,
+        t.shopRank as shopRank,t.createTime as createTime
+        FROM tb_shop_shop t
+        LEFT JOIN tb_user r
+        on t.userId=r.id
+        WHERE 1 = 1
+        <if test="shopNo != null and shopNo != ''">
+            and t.shopNo = #{shopNo}
+        </if>
+        <if test="name !=null and name != ''">
+            and t.name LIKE concat('%',#{name},'%')
+        </if>
+        <if test="mobile !=null and mobile != ''">
+            and r.mobile LIKE concat('%',#{mobile},'%')
+        </if>
+        <if test="shopLevel != null and shopLevel != ''">
+            and t.shopLevel = #{shopLevel}
+        </if>
+        <if test="status != null and status != ''">
+            and t.status = #{status}
+        </if>
+        <if test="startTime != null">
+            and t.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null">
+            and t.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="shopName !=null and shopName != ''">
+            and t.shopName LIKE concat('%',#{shopName},'%')
+        </if>
+        order by t.createTime desc
+    </select>
+
+    <select id="getShopListByPid"
+            resultType="cn.kt.mall.shop.shop.vo.ShopVO">
+        SELECT
+        p.id AS id,
+        p.userId AS userId,
+        p.shopNo AS shopNo,
+        p.shopName AS shopName,
+        p.shopType AS shopType,
+        p.shopTag AS shopTag,
+        p.shopLevel AS shopLevel,
+        p.shopPoint AS shopPoint,
+        p.shopAddress AS shopAddress,
+        p.name AS NAME,
+        t.mobile AS mobile,
+        p.email AS email,
+        p.address AS address,
+        p.STATUS AS STATUS,
+        p.avatar AS avatar,
+        p.whetherLogistics AS whetherLogistics,
+        p.whetherPay AS whetherLogistics,
+        p.shopRank AS shopRank,
+        p.createTime as createTime
+        FROM tb_shop_shop p
+        LEFT JOIN tb_user t on p.userId=t.id
+        WHERE p.userId in
+        <foreach collection="shopIds" item="shopId" open="(" close=")" separator=",">
+            #{shopId}
+        </foreach>
+        <if test="name != null and name != ''">
+            and p.name LIKE concat('%',#{name},'%')
+        </if>
+        <if test="shopName != null and shopName != ''">
+            and p.shopName
+            LIKE concat('%',#{shopName},'%')
+        </if>
+        <if test="shopNo != null and shopNo != ''">
+            and p.shopNo
+            LIKE concat('%',#{shopNo},'%')
+        </if>
+    </select>
+    <select id="getShopIdGoodCountAndAchievement" parameterType="java.lang.String"
+            resultType="cn.kt.mall.shop.shop.vo.ShopVO">
+         SELECT
+			IFNULL(sum(r.totalCny),0) AS incomeLem,
+			(SELECT
+	        count(c.goodId)
+           FROM
+	       tb_shop_shop p
+           LEFT JOIN tb_good_shop_center
+           c ON p.id = c.shopId
+          WHERE
+	      p.id = #{shopId}
+         AND c.goodStatus = 1
+          ) as goodCounts
+		FROM
+			tb_shop_trade r
+		WHERE
+			r.shopId =#{shopId}
+    </select>
+
+    <select id="getShopByShopNoAndShopNameAndName"
+            resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        SELECT * FROM tb_shop_shop
+        WHERE 1 = 1
+        <if test="shopNo != null and shopNo != ''">
+            and shopNo = #{shopNo}
+        </if>
+
+        <if test="shopName != null and shopName != ''">
+            and shopName = #{shopName}
+        </if>
+        <if test="name != null and name != ''">
+            and name = #{name}
+        </if>
+    </select>
+    <!-- 根据用户查询shopId-->
+    <select id="getShopIdByUserId" resultType="java.lang.String">
+        select
+        t.id
+        from tb_shop_shop t
+        WHERE t.userId =  #{userId}
+    </select>
+    <!-- 根据用户查询shopId-->
+    <select id="getShopByUserId" resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        select
+        t.id,
+        t.status
+        from tb_shop_shop t
+        WHERE t.userId =  #{userId}
+    </select>
+    <!-- 根据用户id或者pid查询shopId-->
+    <select id="getShopByIDorPID" resultType="java.lang.String">
+        SELECT
+	      t.id
+        FROM
+	      tb_shop_shop t
+        WHERE
+	      case
+	      when (select id from tb_shop_shop where userId = #{userId}) is null
+	      then
+	        t.userId = #{userPid}
+          else
+            t.userId = #{userId}
+	      end
+    </select>
+    <select id="shopSalesRecord" resultType="cn.kt.mall.shop.shop.vo.ShopSalesVO">
+        SELECT
+        t.id as id,
+        r.trueName as buyUserName ,
+        t.buyUserId as buyUserId ,
+        r.mobile as moblie,
+        t.totalCny as baseTotal ,
+        t.createTime as createTime
+        FROM
+        tb_shop_trade t
+        LEFT JOIN tb_user r ON t.buyUserId = r.id
+        WHERE 1=1
+        <if test="shopId!=null and shopId!=''">
+            and t.shopId = #{shopId}
+        </if>
+        <if test="startTime != null and startTime!='' ">
+            and t.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime!=''">
+            and t.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        ORDER by t.createTime desc
+    </select>
+
+    <!-- 通过shopId查询店铺销量-->
+    <select id="getShopGoodsCountSales"
+            resultType="cn.kt.mall.shop.shop.vo.ShopTradeGoodSalesVO">
+        SELECT
+        min(p.shopType) as shopType,
+        min(p.shopName) as shopName,
+        max(t.createTime) AS createTime,
+        min(t.goodName) AS skuname,
+        sum(t.buyNum) AS goodCount,
+        sum(t.buyPrice*buyNum) AS price,
+        t.goodId AS goodId
+        FROM
+        tb_shop_trade_item t
+        LEFT JOIN tb_shop_shop p ON p.id = t.shopId
+        WHERE 1=1
+        <if test="shopId!=null and shopId!=''">
+            and t.shopId = #{shopId}
+        </if>
+        <if test="goodName!=null and goodName!=''">
+            and t.goodName LIKE concat('%',#{goodName},'%')
+        </if>
+        <if test="startTime != null and startTime!=''">
+            and t.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime!='' ">
+            and t.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        GROUP BY
+        t.goodId
+    </select>
+    <select id="getShopStatisticsList" resultType="cn.kt.mall.shop.shop.vo.ShopStatisticsVO">
+        SELECT
+        min(s.shopName)as shopName ,
+        min(r.mobile)as mobile ,
+        min(r.trueName) as name,
+        sum(e.totalCny) as cnySum,
+        sum(e.coinWait) as popcSum,
+        min(s.userId) as userId,
+        sum(e.totalCny+e.coinWait) as totalPrice
+        FROM
+        tb_shop_trade e
+        LEFT JOIN tb_shop_shop s ON e.shopId = s.id
+        LEFT JOIN tb_user r on r.id=s.userId
+        where 1=1
+        <if test="shopIds!=null and shopIds.size()>0">
+            and e.shopId IN
+            <foreach collection="shopIds" item="shopId" open="(" close=")" separator=",">
+                #{shopId}
+            </foreach>
+        </if>
+
+        <if test="startTime != null and startTime!=''">
+            and e.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime!='' ">
+            and e.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="mobile != null and mobile!='' ">
+            and mobile=#{mobile}
+        </if>
+        GROUP BY s.id
+    </select>
+
+
+    <select id="getShopListByPidAndExport"
+            resultType="cn.kt.mall.shop.shop.vo.ShopVO">
+        SELECT * FROM tb_shop_shop WHERE userId in
+        <foreach collection="shopIds" item="shopId" open="(" close=")" separator=",">
+            #{shopId}
+        </foreach>
+        <if test="name != null and name != ''">
+            and name LIKE concat('%',#{name},'%')
+        </if>
+        <if test="shopName != null and shopName != ''">
+            and shopName
+            LIKE concat('%',#{shopName},'%')
+        </if>
+        <if test="shopNo != null and shopNo != ''">
+            and shopNo
+            LIKE concat('%',#{shopNo},'%')
+        </if>
+    </select>
+
+    <!--查询店铺与业绩合并信息列表-->
+    <select id="getShopStatisticss" resultType="cn.kt.mall.shop.shop.vo.ShopStatisticsVO">
+        SELECT
+        s.id AS id,
+        s.userId AS userId,
+        s.shopNo AS shopNo,
+        s.shopName AS shopName,
+        s.shopLevel AS shopLevel,
+        IFNULL(SUM(t.totalPrice),0) AS totalPrice,
+        IFNULL(sum(t.totalCny),0) as cnySum,
+        IFNULL(sum(t.coinWait),0) as popcSum,
+        s.name AS name,
+        u.mobile AS mobile,
+        u.teamCount AS personCount
+        FROM
+        tb_shop_shop s
+        LEFT JOIN tb_shop_trade t ON s.id = t.shopId
+        LEFT JOIN tb_user u ON u.id = s.userId
+        WHERE
+        s. STATUS IN (1, 3)
+        <!--        <if test="shopIds!=null and shopIds.size()>0">
+                    and e.shopId IN
+                    <foreach collection="shopIds" item="shopId" open="(" close=")" separator=",">
+                        #{shopId}
+                    </foreach>
+                </if>-->
+
+        <if test="beginTime != null and beginTime != ''">
+            <![CDATA[ AND t.createTime >= #{beginTime}]]>
+            <![CDATA[ AND s.createTime >= #{beginTime}]]>
+        </if>
+        <if test="endTime != null and endTime != ''">
+            <![CDATA[ AND t.createTime <= #{endTime}]]>
+            <![CDATA[ AND s.createTime <= #{endTime}]]>
+        </if>
+        <if test="shopType!=null and shopType!=''">
+            and s.shopLevel = #{shopType}
+        </if>
+        <if test="shopName!=null and shopName!=''">
+            and s.shopName LIKE concat('%',#{shopName},'%')
+        </if>
+        <if test="shopNo!=null and shopNo!=''">
+            and s.shopNo LIKE concat('%',#{shopNo},'%')
+        </if>
+        <if test="userName!=null and userName!=''">
+            and u.mobile LIKE concat('%',#{userName},'%')
+        </if>
+        GROUP BY s.id
+    </select>
+    <!--导出商品销售记录-->
+    <select id="shopSalesRecordExport" resultType="cn.kt.mall.shop.shop.vo.ShopTradeGoodSalesVO">
+        SELECT
+            p.shopLevel AS shopLevel,
+            p.shopName AS shopName,
+            t.createTime AS createTime,
+            t.goodName AS skuname,
+            t.buyNum AS goodCount,
+            (t.buyPrice + t.raisePrice) * t.buyNum AS price,
+            t.goodId AS goodId,
+            t.shopId AS shopId
+            FROM
+            tb_shop_trade_item t
+            LEFT JOIN tb_shop_shop p ON p.id = t.shopId
+            WHERE
+            1 = 1
+        <if test="shopType!=null and shopType!=''">
+            and p.shopLevel = #{shopType}
+        </if>
+        <if test="shopName!=null and shopName!=''">
+            and p.shopName LIKE concat('%',#{shopName},'%')
+        </if>
+        <if test="skuName!=null and skuName!=''">
+            and t.goodName LIKE concat('%',#{skuName},'%')
+        </if>
+        <if test="startTime != null and startTime!=''">
+            and t.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime!=''">
+            and t.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        ORDER BY t.createTime desc
+    </select>
+
+    <!-- 编辑店铺开启&关闭状态（批量） -->
+    <update id="editShopStatus">
+        UPDATE tb_shop_shop SET status=#{status} WHERE id in
+        <foreach collection="idsList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+
+    <!-- 根据店铺ID 时间分组统计数据-->
+    <select id="getShopSalesAndTime" resultType="cn.kt.mall.shop.shop.vo.ShopSalesAndTimeVO">
+        SELECT
+        sum(e.totalCny) AS sale,
+        str_to_date(e.createTime, '%Y-%m-%d') AS time
+        FROM
+        tb_shop_trade e
+        LEFT JOIN tb_shop_shop s ON e.shopId = s.id
+        WHERE
+        1 = 1
+        <if test="startTime != null and startTime!=''">
+            AND str_to_date(e.createTime, '%Y-%m-%d') <![CDATA[ >= ]]> str_to_date(#{startTime}, '%Y-%m-%d')
+        </if>
+        <if test="endTime != null and endTime!=''">
+            AND str_to_date(e.createTime, '%Y-%m-%d') <![CDATA[ <= ]]> str_to_date(#{endTime}, '%Y-%m-%d')
+        </if>
+        AND e.shopId = #{shopId}
+        GROUP BY
+        str_to_date(e.createTime, '%Y-%m-%d')
+    </select>
+    <select id="getShopSalesAndPointAndCoupon" resultType="cn.kt.mall.shop.shop.vo.ShopSalesAndTimeVO">
+      SELECT
+        IFNULL(sum(e.totalCny),0) AS sale,
+        IFNULL(sum(e.totalCny),0) AS pointSum,
+        IFNULL(sum(e.coinWait),0) AS couponSum
+        FROM
+        tb_shop_trade e
+        LEFT JOIN tb_shop_shop s ON e.shopId = s.id
+        WHERE
+       e.shopId=#{shopId}
+    </select>
+
+    <select id="shopSalesRecordByShopExport" resultType="cn.kt.mall.shop.shop.vo.ShopSalesVO">
+        SELECT
+        t.id as id,
+        r.trueName as buyUserName ,
+        t.buyUserId as buyUserId ,
+        r.mobile as moblie,
+        t.totalCny as baseTotal ,
+        t.createTime as createTime
+        FROM
+        tb_shop_trade t
+        LEFT JOIN tb_user r ON t.buyUserId = r.id
+        WHERE 1=1
+        <if test="shopId!=null and shopId!=''">
+            and t.shopId = #{shopId}
+        </if>
+        <if test="startTime != null and startTime!='' ">
+            and t.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime!=''">
+            and t.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        ORDER by t.createTime desc
+    </select>
+
+
+    <select id="getShopGoodsSales" resultType="cn.kt.mall.shop.shop.vo.ShopTradeGoodSalesVO">
+       SELECT
+        sum(t.buyPrice*buyNum) AS shopTotalPoint
+        FROM
+        tb_shop_trade_item t
+        LEFT JOIN tb_shop_shop p ON p.id = t.shopId
+        WHERE 1=1
+         and t.shopId=#{shopId}
+             GROUP BY t.shopId
+    </select>
+
+
+    <select id="shopForUpdate" resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        SELECT  * from tb_shop_shop for update
+    </select>
+    <select id="getShopsList" resultType="java.lang.String">
+        select id from tb_shop_shop
+    </select>
+
+
+    <select id="getShopStatisticsListByShopExportt" resultType="cn.kt.mall.shop.shop.vo.ShopStatisticsVO">
+        SELECT
+        min(s.shopName)as shopName ,
+        min(r.mobile)as mobile ,
+        min(r.trueName) as name,
+        sum(e.totalCny) as cnySum,
+        sum(e.coinWait) as popcSum,
+        min(s.userId) as userId,
+        sum(e.totalCny+e.coinWait) as totalPrice
+        FROM
+        tb_shop_trade e
+        LEFT JOIN tb_shop_shop s ON e.shopId = s.id
+        LEFT JOIN tb_user r on r.id=s.userId
+        where 1=1
+        <if test="shopIds!=null and shopIds.size()>0">
+            and e.shopId IN
+            <foreach collection="shopIds" item="shopId" open="(" close=")" separator=",">
+                #{shopId}
+            </foreach>
+        </if>
+
+        <if test="startTime != null and startTime!=''">
+            and e.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime!='' ">
+            and e.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="mobile != null and mobile!='' ">
+            and mobile=#{mobile}
+        </if>
+        GROUP BY s.id
+    </select>
+
+
+    <!-- 通过shopId查询店铺销量-->
+    <select id="getShopGoodsCountSalesExport"
+            resultType="cn.kt.mall.shop.shop.vo.ShopTradeGoodSalesVO">
+        SELECT
+        min(p.shopType) as shopType,
+        min(p.shopName) as shopName,
+        max(t.createTime) AS createTime,
+        min(t.goodName) AS skuname,
+        sum(t.buyNum) AS goodCount,
+        sum(t.buyPrice*buyNum) AS price,
+        t.goodId AS goodId
+        FROM
+        tb_shop_trade_item t
+        LEFT JOIN tb_shop_shop p ON p.id = t.shopId
+        WHERE 1=1
+        <if test="shopId!=null and shopId!=''">
+            and t.shopId = #{shopId}
+        </if>
+        <if test="goodName!=null and goodName!=''">
+            and t.goodName LIKE concat('%',#{goodName},'%')
+        </if>
+        <if test="startTime != null and startTime!=''">
+            and t.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime!='' ">
+            and t.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        GROUP BY
+        t.goodId
+    </select>
+
+    <!--修改店铺名称与编号-->
+    <update id="updateShopInfo" parameterType="cn.kt.mall.shop.shop.entity.ShopEntity" flushCache="true">
+        UPDATE tb_shop_shop SET shopNo = #{shopNo},shopName = #{shopName} WHERE id = #{id}
+    </update>
+
+    <select id="randShop" resultType="cn.kt.mall.shop.shop.entity.ShopEntity" parameterType="java.lang.Integer">
+        SELECT distinct id,shopName,shopLevel,shopRank FROM tb_shop_shop WHERE status=1  ORDER BY RAND() limit #{num}
+    </select>
+
+    <select id="getAllShop" resultType="cn.kt.mall.shop.shop.entity.ShopEntity">
+        SELECT userId,(case shopLevel
+        when 2 then '零售店'
+        when 3 then '批发店'
+        else '未知类型'
+        end
+       )shopLevel FROM tb_shop_shop
+    </select>
+
+    <select id="getCloseShop" resultType="java.lang.String">
+       select id from tb_shop_shop t where t.status=3
+    </select>
+
+    <select id="shopSalesRecordTotalPrice" resultType="java.math.BigDecimal">
+        SELECT
+          SUM((t.buyPrice + t.raisePrice )* t.buyNum) AS price
+        FROM
+        tb_shop_trade_item t
+        LEFT JOIN tb_shop_shop p ON p.id = t.shopId
+        WHERE
+        1 = 1
+        <if test="shopType!=null and shopType!=''">
+            and p.shopLevel = #{shopType}
+        </if>
+        <if test="shopName!=null and shopName!=''">
+            and p.shopName LIKE concat('%',#{shopName},'%')
+        </if>
+        <if test="skuName!=null and skuName!=''">
+            and t.goodName LIKE concat('%',#{skuName},'%')
+        </if>
+        <if test="startTime != null and startTime!=''">
+            and t.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime!=''">
+            and t.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+    </select>
+
+</mapper>

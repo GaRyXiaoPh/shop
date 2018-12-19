@@ -1,0 +1,1 @@
+ALTER TABLE tb_good_coupon_center MODIFY couponNum DECIMAL(20,8) NULL COMMENT '优惠券数量'

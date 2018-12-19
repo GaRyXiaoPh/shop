@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.management.admin.dao.UserOperatorLogDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <insert id="add" parameterType="cn.kt.mall.management.admin.entity.UserOperatorLogEntity" flushCache="true">
+        INSERT INTO tb_user_operator_log(id,user_id,account, oprator_Time, position,operator_type,operator_name)
+        VALUES(#{id},#{userId}, #{account}, #{opratorTime}, #{position} ,#{operatorType},#{operatorName})
+
+</insert>
+
+</mapper>

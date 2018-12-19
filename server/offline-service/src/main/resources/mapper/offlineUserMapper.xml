@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.offline.dao.OfflineUserDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+    <!--根据手机号查询商圈商户信息-->
+    <select id="queryByMobile" parameterType="string" resultType="cn.kt.mall.offline.entity.OfflineUserEntity">
+        select t.* from tb_user t
+        inner join tb_shop_shop s on t.id = s.userId
+        where t.mobile = #{mobile} and s.shopType = 1
+        limit 0,1
+    </select>
+
+    <!--根据用户id获取线下店铺id-->
+    <select id="getShopId" resultType="string">
+        select id from tb_shop_shop  where userId = #{userId} and shopType = 1
+    </select>
+
+</mapper>

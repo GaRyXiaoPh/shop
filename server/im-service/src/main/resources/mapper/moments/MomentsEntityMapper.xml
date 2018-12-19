@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="cn.kt.mall.im.moments.mapper.MomentsEntityMapper">
+	<resultMap id="BaseResultMap"
+		type="cn.kt.mall.im.moments.entity.MomentsEntity">
+		<id column="id" property="id" jdbcType="BIGINT" />
+		<result column="content" property="content" jdbcType="VARCHAR" />
+		<result column="address_lon" property="addressLon" jdbcType="VARCHAR" />
+		<result column="address_lat" property="addressLat" jdbcType="VARCHAR" />
+		<result column="user_id" property="userId" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime" jdbcType="TIMESTAMP" />
+		<result column="location" property="location" jdbcType="VARCHAR" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, content, address_lon, address_lat, user_id, location, create_time
+	</sql>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap"
+		parameterType="java.lang.Long">
+		select
+		<include refid="Base_Column_List" />
+		from tb_moments
+		where id = #{id,jdbcType=BIGINT}
+	</select>
+	
+	<select id="listMoments" resultType="cn.kt.mall.im.moments.vo.MomentsRespVO">
+		select m.id,m.content,m.address_lon as addressLon,m.address_lat as addressLat,m.location,
+			m.user_id as userId,m.create_time as createTime,u.avatar,u.nick,u.username as userName
+		from tb_moments m 
+		left join tb_user u on u.id = m.user_id
+		where m.user_id in
+		<foreach collection="friendIds" item="friendId" open="(" close=")" separator=",">
+			#{friendId}
+		</foreach>
+		order by m.create_time DESC
+	</select>
+	
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+		delete from tb_moments
+		where id = #{id,jdbcType=BIGINT}
+	</delete>
+	
+	<insert id="insert"
+		parameterType="cn.kt.mall.im.moments.entity.MomentsEntity" keyProperty="id" useGeneratedKeys="true">
+		insert into tb_moments (id, content, address_lon,
+		address_lat, user_id, location
+		)
+		values (
+			#{id,jdbcType=BIGINT}, #{content,jdbcType=VARCHAR},
+			#{addressLon,jdbcType=VARCHAR}, #{addressLat,jdbcType=VARCHAR}, #{userId,jdbcType=VARCHAR},
+			#{location,jdbcType=VARCHAR}
+		)
+	</insert>
+	
+	<insert id="insertSelective"
+		parameterType="cn.kt.mall.im.moments.entity.MomentsEntity" keyProperty="id" useGeneratedKeys="true">
+		insert into tb_moments
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="content != null">
+				content,
+			</if>
+			<if test="addressLon != null">
+				address_lon,
+			</if>
+			<if test="addressLat != null">
+				address_lat,
+			</if>
+			<if test="userId != null">
+				user_id,
+			</if>
+			<if test="createTime != null">
+				create_time,
+			</if>
+			<if test="location != null">
+				location,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=BIGINT},
+			</if>
+			<if test="content != null">
+				#{content,jdbcType=VARCHAR},
+			</if>
+			<if test="addressLon != null">
+				#{addressLon,jdbcType=VARCHAR},
+			</if>
+			<if test="addressLat != null">
+				#{addressLat,jdbcType=VARCHAR},
+			</if>
+			<if test="userId != null">
+				#{userId,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="location != null">
+				#{location,jdbcType=VARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective"
+		parameterType="cn.kt.mall.im.moments.entity.MomentsEntity">
+		update tb_moments
+		<set>
+			<if test="content != null">
+				content = #{content,jdbcType=VARCHAR},
+			</if>
+			<if test="addresslon != null">
+				address_lon = #{addressLon,jdbcType=VARCHAR},
+			</if>
+			<if test="addresslat != null">
+				address_lat = #{addressLat,jdbcType=VARCHAR},
+			</if>
+			<if test="userId != null">
+				user_id = #{userId,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				create_time = #{createTime,jdbcType=TIMESTAMP},
+			</if>
+		</set>
+		where id = #{id,jdbcType=BIGINT}
+	</update>
+	<update id="updateByPrimaryKey"
+		parameterType="cn.kt.mall.im.moments.entity.MomentsEntity">
+		update tb_moments
+		set content = #{content,jdbcType=VARCHAR},
+		address_lon = #{addressLon,jdbcType=VARCHAR},
+		address_lat = #{addressLat,jdbcType=VARCHAR},
+		user_id = #{userId,jdbcType=VARCHAR},
+		create_time = #{createTime,jdbcType=TIMESTAMP}
+		where id = #{id,jdbcType=BIGINT}
+	</update>
+</mapper>

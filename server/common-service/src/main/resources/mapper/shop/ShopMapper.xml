@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.common.wallet.mapper.ShopScalesDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+    <select id="getMyShop" parameterType="string" resultType="cn.kt.mall.common.wallet.entity.ShopEntity">
+        SELECT * FROM tb_shop_shop WHERE userId = #{userId} for UPDATE
+    </select>
+    <update id="updateShopSalesAmount" parameterType="cn.kt.mall.common.wallet.entity.ShopEntity" flushCache="true">
+        UPDATE tb_shop_shop SET shopSalesAmount = #{shopSalesAmount} WHERE id = #{id}
+    </update>
+    <insert id="addShopScalesLog" parameterType="cn.kt.mall.common.shop.vo.ShopSalesAmountVO" flushCache="true">
+        INSERT INTO tb_shop_shop_sales_log(id, userId, shopSalesAmountBefore,
+          shopSalesAmountChange, shopSalesAmountAfter,operateType,
+          referenceId, createTime
+        )
+        VALUES (
+          #{id},#{userId},#{shopSalesAmountBefore},
+          #{shopSalesAmountChange},#{shopSalesAmountAfter},#{operateType},
+          #{referenceId},NOW()
+        )
+    </insert>
+    <select id="getShopEntityByShopId" parameterType="string" resultType="cn.kt.mall.common.wallet.entity.ShopEntity">
+        SELECT * FROM tb_shop_shop WHERE id=#{shopId}
+    </select>
+</mapper>

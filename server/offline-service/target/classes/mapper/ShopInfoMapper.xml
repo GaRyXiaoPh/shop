@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.offline.dao.ShopInfoDAO">
+
+    <!--查询店铺信息-->
+    <select id="selectShopInfo" parameterType="string" resultType="cn.kt.mall.offline.entity.ShopInfoEntity">
+        select t.userId,
+               t.id AS shopId,
+               t.shopName,
+               t.shopPoint,
+               t.shopTag,
+               t.shopAddress,
+               t.mobile,
+               a.companyImg,
+               s.name AS companyType
+          from tb_shop_shop t
+    inner join tb_shop_authdata a on t.id = a.shopId
+    left join tb_circle_shop_type s on t.shopTag = s.id
+         where t.id = #{shopId}
+           and t.shopType = 1
+    </select>
+
+    <!--查询店铺的商品信息-->
+    <select id="selectGoodInfo" parameterType="string" resultType="cn.kt.mall.offline.entity.GoodEntity">
+          select t.id,
+                 t.name,
+                 t.price,
+                 p.url
+          from tb_circle_goods t
+          inner join
+               (select * from tb_circle_goods_pic where is_main = 0 and type = 0) p
+            on
+                t.id = p.good_id
+        where
+               t.userId = #{userId}
+          and
+               t.`status` = 2
+    </select>
+
+</mapper>

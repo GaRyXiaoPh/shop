@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.common.bitcoin.mapper.BtcConfDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <insert id="add" flushCache="true">
+        REPLACE  INTO btc_conf_kv(keyex, valueex, mark, lastTime)
+        VALUES (#{keyex}, #{valueex}, #{mark}, NOW())
+    </insert>
+
+    <select id="getValue" parameterType="string" resultType="cn.kt.mall.common.bitcoin.entity.BtcConfEntity">
+        SELECT * FROM btc_conf_kv WHERE keyex=#{keyex} limit 0, 1
+    </select>
+
+</mapper>

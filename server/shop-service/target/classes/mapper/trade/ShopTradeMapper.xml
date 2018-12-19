@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.trade.mapper.ShopTradeDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <select id="queryShopTradeList" resultType="cn.kt.mall.shop.trade.vo.ShopTradeRespVO"
+            parameterType="cn.kt.mall.shop.trade.vo.ShopTradeReqVO">
+        select t.*, t2.shopName,t2.shopNo,t2.whetherLogistics from tb_shop_trade t,tb_shop_shop t2
+        where t.shopId = t2.id
+        <if test="shopownerName != null and shopownerName != ''">
+            and t2.name like concat('%',#{shopownerName},'%')
+        </if>
+        <if test="status != null and status != ''">
+            and t.status = #{status}
+        </if>
+        <if test="shopId != null and shopId != ''">
+            and t.shopId = #{shopId}
+        </if>
+        <if test="adminQuery == false">
+            and t2.whetherLogistics = 1
+        </if>
+        <if test="startTime != null">and t.createTime <![CDATA[ >= ]]> #{startTime}</if>
+        <if test="endTime != null">and t.createTime <![CDATA[ <= ]]> #{endTime}</if>
+        order by t.createTime DESC
+    </select>
+
+    <select id="selectTotalMoney" resultType="java.math.BigDecimal">
+        SELECT SUM(totalPrice) FROM tb_shop_trade
+        where status in (1,2,3)
+        and createTime between concat(#{dayString},' 00:00:00') and concat(#{dayString},' 23:59:59')
+    </select>
+
+    <select id="getTotalIncomeForShop" resultType="java.math.BigDecimal">
+        SELECT SUM(totalCny) FROM tb_shop_trade
+        where status in (1,2,3,4)
+        and shopId = #{shopId}
+    </select>
+
+
+</mapper>

@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.management.admin.dao.AuthorityDao">
+
+    <!--获取权限列表-->
+    <select id="getAuthority" resultType="cn.kt.mall.management.admin.entity.AuthorityEntity">
+       select res_id AS resId,name from tb_admin_resources
+       where res_level = #{resLevel}
+         <if test="preId != null">
+             and pre_id = #{preId};
+         </if>
+    </select>
+
+    <select id="getRoleByName" resultType="cn.kt.mall.management.admin.entity.RoleEntity">
+        select * from tb_admin_role where name = #{name}
+    </select>
+
+    <!--添加角色-->
+    <insert id="addRole">
+        insert into tb_admin_role(name,create_user_id,des,status) values(#{name},#{creator},#{des},0)
+    </insert>
+
+    <!--查询角色列表-->
+    <select id="getRoleList" resultType="cn.kt.mall.management.admin.entity.RoleEntity">
+       SELECT
+            r.role_id AS roleId,
+            r.name AS roleName,
+            r.create_time as createTime,
+            r.`status`
+        FROM tb_admin_role r
+        WHERE r.status = 0
+    </select>
+
+    <!--角色编辑-->
+    <update id="updateRole">
+         UPDATE tb_admin_role
+         <set>
+             <if test="name != null and name != ''">
+                 name = #{name},
+             </if>
+             <if test="des != null and des != ''">
+                 des = #{des},
+             </if>
+             <if test="status != null">
+                 status = #{status},
+             </if>
+             last_up_time = NOW()
+         </set>
+         <where>
+             role_id = #{roleId}
+         </where>
+    </update>
+
+    <!--删除角色-->
+    <delete id="delRole">
+        delete from tb_admin_role where role_id = #{roleId}
+    </delete>
+
+    <!--添加角色与资源关系-->
+    <insert id="addRoleRes">
+        INSERT INTO tb_admin_role_res (role_id,res_id)
+        VALUES (#{roleId},#{resId})
+    </insert>
+    <!--添加角色,资源,操作关系-->
+    <insert id="addResOpRole" parameterType="list">
+        INSERT INTO tb_admin_resources_operation (res_id,op_id,role_id) VALUES
+        <foreach collection="list" separator="," item="item">
+            (#{item.resId},#{item.opId},#{item.roleId})
+        </foreach>
+    </insert>
+
+    <!--查询角色是否已存在关联的资源-->
+    <select id="getRoleResList" parameterType="int" resultType="cn.kt.mall.management.admin.vo.RoleResVO">
+        select * from tb_admin_role_res where role_id = #{roleId}
+    </select>
+
+    <select id="getAllRoleResList" parameterType="int" resultType="cn.kt.mall.management.admin.vo.RoleResVO">
+        select * from tb_admin_role_res where role_id
+    </select>
+
+    <select id="getResourceList" resultType="cn.kt.mall.management.admin.vo.AdminResourceVO">
+        select res_id as id,name,pre_id as parentId from tb_admin_resources
+    </select>
+
+    <!--删除角色与资源关系表-->
+    <delete id="delRoleRes" parameterType="int">
+        delete from tb_admin_role_res where role_id = #{roleId}
+    </delete>
+    <!--批量删除角色与资源关系表-->
+    <delete id="delUserRoles" parameterType="list">
+        delete from tb_admin_user_role
+        where user_id in
+        <foreach collection="list" separator="," item="item" open="(" close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!--删除角色与资源关系表-->
+    <delete id="delRoleResOp" parameterType="int">
+        delete from tb_admin_resources_operation where role_id = #{roleId}
+    </delete>
+    <!--添加用户与角色关系-->
+    <insert id="addAdminRole">
+       insert into tb_admin_user_role (user_id,role_id) values(#{userId},#{roleId})
+    </insert>
+
+    <!--批量添加用户与角色关系-->
+    <insert id="addResourceRoles" parameterType="list">
+        insert into tb_admin_role_res (role_id,res_id) values
+        <foreach collection="list" separator="," item="item">
+            (#{item.roleId},#{item.resId})
+        </foreach>
+    </insert>
+
+
+    <select id="getMenuListByRoleIdAndPreID" resultType="cn.kt.mall.management.admin.entity.AdminResourcesEntity">
+		select tb3.res_id resId ,tb3.name name,tb3.res_level resLever ,tb3.url url,tb3.pre_id preId ,tb3.sort_index sortIndex,
+        tb3.create_time createTime ,tb3.last_up_time lastUpTime
+        from (
+            select * from `tb_admin_resources` tar where tar.`res_id` in (
+                select tarr.res_id
+                from `tb_admin_role_res` tarr
+                where tarr.`role_id`= #{roleId}
+                and tar.status = 0
+            )
+        ) tb3
+        where tb3.pre_id = #{preId}
+        order by tb3.sort_index asc
+    </select>
+    <select id="getUserRoleId" resultType="cn.kt.mall.management.admin.entity.RoleEntity">
+        select taur.role_id roleId
+        from `tb_admin_user_role` taur
+        where taur.`user_id` = #{userId}
+    </select>
+    <select id="getOperationEntityByResIdAndRoleId" resultType="cn.kt.mall.management.admin.entity.AdminOperationEntity">
+        select tao.`op_id` opId,tao.`name` name,tao.english_name englishName,tao.`create_time` createTime,tao.`last_up_time` lastUpTime
+        from `tb_admin_resources_operation` taro
+        inner join `tb_admin_operation` tao
+        on taro.`op_id`= tao.`op_id`
+        where res_id = #{resId}
+        and role_id = #{roleId}
+    </select>
+
+    <select id="getOperationEntityByResIdAndRoleIdAndOpId" resultType="cn.kt.mall.management.admin.entity.AdminOperationEntity">
+        select taro.op_id opId
+        from `tb_admin_resources_operation` taro
+        where res_id = #{resId}
+        and role_id = #{roleId}
+        and op_id = #{opId}
+    </select>
+
+    <select id="getResourcesOperationEntitys" resultType="cn.kt.mall.management.admin.entity.AdminResourcesOperationEntity">
+        select taro.op_id opId,taro.res_id resId,taro.role_id roleId
+        from `tb_admin_resources_operation` taro
+        order by taro.op_id asc
+    </select>
+    <select id="getOperationEntitys" resultType="cn.kt.mall.management.admin.entity.AdminOperationEntity">
+        select op_id opId,name as name
+        from `tb_admin_operation`
+    </select>
+</mapper>

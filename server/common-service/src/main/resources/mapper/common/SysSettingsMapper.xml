@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="cn.kt.mall.common.common.mapper.SysSettingsMapper">
+	<resultMap id="BaseResultMap"
+		type="cn.kt.mall.common.common.entity.SysSettings">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="code" property="code" jdbcType="VARCHAR" />
+		<result column="label" property="label" jdbcType="VARCHAR" />
+		<result column="mark" property="mark" jdbcType="VARCHAR" />
+		<result column="createTime" property="createTime"
+			jdbcType="TIMESTAMP" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, code, label, mark, createTime
+	</sql>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from tb_sys_settings
+		where code = #{code} and label= #{label} limit 0,1
+	</select>
+	<delete id="deleteByPrimaryKey"
+		parameterType="java.lang.Integer">
+		delete from tb_sys_settings
+		where id =
+		#{id,jdbcType=INTEGER}
+	</delete>
+	<insert id="insert"
+		parameterType="cn.kt.mall.common.common.entity.SysSettings">
+		insert into tb_sys_settings (id, code, label,
+		mark,
+		createTime)
+		values (#{id,jdbcType=INTEGER}, #{code,jdbcType=VARCHAR},
+		#{label,jdbcType=VARCHAR},
+		#{mark,jdbcType=VARCHAR},
+		#{createTime,jdbcType=TIMESTAMP})
+	</insert>
+	<insert id="insertSelective"
+		parameterType="cn.kt.mall.common.common.entity.SysSettings">
+		insert into tb_sys_settings
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="code != null">
+				code,
+			</if>
+			<if test="label != null">
+				label,
+			</if>
+			<if test="mark != null">
+				mark,
+			</if>
+			<if test="createTime != null">
+				createTime,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=INTEGER},
+			</if>
+			<if test="code != null">
+				#{code,jdbcType=VARCHAR},
+			</if>
+			<if test="label != null">
+				#{label,jdbcType=VARCHAR},
+			</if>
+			<if test="mark != null">
+				#{mark,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=TIMESTAMP},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective"
+		parameterType="cn.kt.mall.common.common.entity.SysSettings">
+		update tb_sys_settings
+		<set>
+			<if test="code != null">
+				code = #{code,jdbcType=VARCHAR},
+			</if>
+			<if test="label != null">
+				label = #{label,jdbcType=VARCHAR},
+			</if>
+			<if test="mark != null">
+				mark = #{mark,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				createTime = #{createTime,jdbcType=TIMESTAMP},
+			</if>
+		</set>
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	<update id="updateByPrimaryKey"
+		parameterType="cn.kt.mall.common.common.entity.SysSettings">
+		update tb_sys_settings
+		set code =
+		#{code,jdbcType=VARCHAR},
+		label = #{label,jdbcType=VARCHAR},
+		mark =
+		#{mark,jdbcType=VARCHAR},
+		createTime = #{createTime,jdbcType=TIMESTAMP}
+		where id = #{id,jdbcType=INTEGER}
+	</update>
+	
+	<select id="selectByCode" parameterType="java.lang.String" resultMap="BaseResultMap">
+		select
+			<include refid="Base_Column_List" />
+		from tb_sys_settings
+		where code = #{code,jdbcType=VARCHAR}
+	</select>
+	
+	<update id="updateByLabel">
+		update tb_sys_settings set mark = #{mark} where label = #{label}
+	</update>
+
+	<update id="updateLabelByCode">
+		update tb_sys_settings set label = #{label} where code = #{code}
+	</update>
+
+	<!-- 获取阿里云oss配置 -->
+	<select id="getOssParam" resultType="cn.kt.mall.common.common.entity.SysSettings">
+		select * from tb_sys_settings where id in (3,4,5,6)
+	</select>
+
+	<select id="getLevleConfigList" resultType="cn.kt.mall.common.common.entity.LevleConfig">
+		select * from tb_level_config
+	</select>
+	<!-- 获取优惠券配置 -->
+	<select id="getCouponParam" resultType="cn.kt.mall.common.common.entity.SysSettings">
+		select * from tb_sys_settings where id in (9,10,11,12)
+	</select>
+	<!-- 获取消费返优惠券配置 -->
+	<select id="getReturnParam" resultType="cn.kt.mall.common.common.entity.SysSettings">
+		select * from tb_sys_settings where id = '8'
+	</select>
+
+	<!-- 彩票/游戏积分提取续费手续费 -->
+	<select id="getGameParam" resultType="cn.kt.mall.common.common.entity.SysSettings">
+		select * from tb_sys_settings where id = '13'
+	</select>
+
+	<!-- 获取消费返优惠券配置 -->
+	<select id="getTranferConfig" resultType="cn.kt.mall.common.common.entity.SysSettings">
+		SELECT
+			*
+		FROM
+			tb_sys_settings
+		WHERE
+			CODE IN (
+				'transfer_increase',
+				'transfer_start',
+				'inside_ratio',
+				'outside_ratio',
+				'coupon_extract',
+				'coupon_transfer_point_ratio'
+			)
+	</select>
+</mapper>

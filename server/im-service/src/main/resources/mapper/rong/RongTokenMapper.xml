@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.im.rong.mapper.RongTokenMapper">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <!-- 获取访问Token -->
+    <select id="getTokenByUser" resultType="cn.kt.mall.im.rong.entity.RongTokenEntity">
+        SELECT * from tb_im_rong_token WHERE userId = #{userId} limit 0,1
+    </select>
+
+    <!-- 更新访问Token -->
+    <insert id="addToken" parameterType="cn.kt.mall.im.rong.entity.RongTokenEntity" flushCache="true">
+        INSERT INTO tb_im_rong_token (
+            id,
+            userId,
+            token,
+            STATUS,
+            createTime
+        )
+        VALUES
+            (#{id}, #{userId}, #{token}, 0, NOW())
+    </insert>
+
+    <update id="updateToken" parameterType="string" flushCache="true">
+        UPDATE tb_im_rong_token SET token = #{token} where userId = #{userId}
+    </update>
+
+    <update id="updateTokenStatus" parameterType="string" flushCache="true">
+        UPDATE tb_im_rong_token SET status = #{status} where userId = #{userId}
+    </update>
+</mapper>

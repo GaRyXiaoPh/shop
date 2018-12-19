@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.offline.dao.OfflineShopDAO">
+
+    <!--查询商圈商户列表-->
+    <select id="selectHomeShopList" parameterType="long" resultType="cn.kt.mall.offline.entity.ShopEntity">
+        select t1.id AS shopId,
+               t1.shopName,
+               t1.shopPoint,
+               t2.companyImg,
+               t5.name  AS companyType,
+               t2.city,
+               t3.City_Name AS cityName,
+               t2.county,
+               t4.district_Name AS countryName,
+               t2.addressLon,
+               t2.addressLat
+        from  tb_shop_shop t1
+        inner join tb_shop_authdata t2 on t1.id = t2.shopId
+        inner join bbt_system_city t3 on t2.city = t3.sid
+        inner join bbt_system_district t4 on t2.county = t4.sid
+        left join tb_circle_shop_type t5 on t1.shopTag = t5.id
+        where  t1.shopType = 1
+          and  t1.`status` =1
+          <if test="city != null ">
+              and t2.city = #{city}
+          </if>
+    </select>
+
+    <!--搜索商户列表-->
+    <select id="searchShopList" parameterType="cn.kt.mall.offline.vo.SearchShopVO"
+            resultType="cn.kt.mall.offline.entity.ShopEntity">
+         select t1.id AS shopId,
+                t1.shopName,
+                t1.shopPoint,
+                t2.companyImg,
+                t5.name  AS companyType,
+                t2.city,
+                t3.City_Name AS cityName,
+                t2.county,
+                t4.district_Name AS countryName,
+                t2.addressLon,
+                t2.addressLat
+         from   tb_shop_shop t1
+         inner join tb_shop_authdata t2 on t1.id = t2.shopId
+         inner join bbt_system_city t3 on t2.city = t3.sid
+         inner join bbt_system_district t4 on t2.county = t4.sid
+         inner join tb_circle_shop_type t5 on t1.shopTag = t5.id
+         where  t1.shopType = 1
+           and  t1.`status` =1
+                <if test="city != null ">
+                    and t2.city = #{city}
+                </if>
+                <if test="country != null">
+                    and t2.county = #{country}
+                </if>
+                <if test="name != null and name != ''">
+                    and t1.shopName  LIKE CONCAT('%','${name}','%')
+                </if>
+                <if test="shopTag != null and shopTag != ''">
+                    and t1.shopTag = #{shopTag}
+                </if>
+                <if test="sort != null and sort==1">
+                    order by t1.shopPoint desc
+                </if>
+    </select>
+
+    <!--获取商家信息-->
+    <select id="getMerInfo" resultType="cn.kt.mall.offline.entity.MerInfoEntity">
+        SELECT
+            t.name,
+            t.mobile,
+            t.address,
+            t.id AS shopId,
+            t.shopName,
+            t.shopTag,
+            a.province,
+            a.city,
+            a.county,
+            a.detailAddress,
+            a.companyType,
+            a.businessScope,
+            a.businessNo,
+            a.companyImg,
+            a.businessImg1,
+            a.businessImg2,
+            a.businessImg3,
+            a.businessImg4,
+            a.businessImg5,
+            a.companyMobile
+        FROM tb_shop_shop t
+        INNER JOIN tb_shop_authdata a ON t.id = a.shopId
+        WHERE t.id = #{id}
+    </select>
+</mapper>

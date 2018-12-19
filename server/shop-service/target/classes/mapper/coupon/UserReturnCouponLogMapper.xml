@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.coupon.mapper.UserReturnCouponLogDAO">
+
+    <!--<cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+
+   <!-- <select id="getCouponsList" parameterType="string" resultType="cn.kt.mall.shop.coupon.vo.CouponsVO">
+          SELECT * FROM tb_coupon WHERE 1 = 1
+            <if test="id != null and id != ''">
+                   AND id = #{id}
+            </if>
+          ORDER BY createTime DESC
+    </select>-->
+    <select id="getUserReturnCouponLogList" resultType="cn.kt.mall.shop.coupon.entity.UserReturnCouponLogEntity">
+        select * from tb_user_return_coupon_log where 1=1 and sendFinish = 0
+    </select>
+
+    <update id="updateUserReturnCouponLogById" parameterType ="cn.kt.mall.shop.coupon.entity.UserReturnCouponLogEntity" >
+      update tb_user_return_coupon_log  set
+
+        <if test="currentReleaseNum !=null and currentReleaseNum !=''">
+            currentReleaseNum = #{currentReleaseNum},
+        </if>
+        <if test="sendFinish !=null and sendFinish !=''">
+            sendFinish = #{sendFinish},
+        </if>
+        <if test="afterAmount !=null and afterAmount !=''">
+            afterAmount = #{afterAmount}
+        </if>
+        WHERE id = #{id}
+
+    </update>
+    <insert id="insertUserReturnCouponLogById" parameterType="cn.kt.mall.shop.coupon.entity.UserReturnCouponLogEntity" >
+        insert into tb_user_return_coupon_log(id,userId,tradeId,relationUserId,amount,returnRatio,couponId,needReleaseDays,createTime)
+        values
+        (#{id},#{userId},#{tradeId},#{relationUserId},#{amount},#{returnRatio},#{couponId},#{needReleaseDays},NOW())
+    </insert>
+    <select id="getUserReturnCouponLog" resultType="cn.kt.mall.shop.coupon.entity.UserReturnCouponLogEntity">
+        select * from tb_user_return_coupon_log where userId = #{userId} and tradeId = #{tradeId}
+    </select>
+    <select id="getUserReleaseCouponLogEntityList" resultType="cn.kt.mall.shop.coupon.entity.UserReleaseCouponLogEntity">
+        SELECT
+        *
+        FROM
+        tb_user_release_coupon_log urcl
+        WHERE
+        urcl.userId = #{userId,jdbcType=VARCHAR}
+        AND urcl.couponLogId = #{couponLogId,jdbcType=VARCHAR}
+        AND urcl.releaseType = 0
+        ORDER BY urcl.createTime DESC
+    </select>
+    <select id="getUserReleaseCouponLogEntityBaseList" resultType="cn.kt.mall.shop.coupon.entity.UserReleaseCouponLogEntity">
+        SELECT
+        *
+        FROM
+        tb_user_release_coupon_log urcl
+        WHERE
+        urcl.userId = #{userId,jdbcType=VARCHAR}
+        AND urcl.releaseType = 1
+        ORDER BY urcl.createTime DESC
+    </select>
+    <select id="getUserReleaseBaseAmount" resultType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+        SELECT
+        IFNULL(sum(urcl.amount), 0) AS releaseAmountBase
+        FROM
+        tb_user_release_coupon_log urcl
+        WHERE
+        urcl.userId = #{userId,jdbcType=VARCHAR}
+        AND urcl.releaseType = 1
+    </select>
+    <update id="updatePatchUserReturnCouponLog" flushCache="true">
+        <foreach collection="list" separator="," item="item">
+            update tb_user_return_coupon_log  set
+                currentReleaseNum = #{item.currentReleaseNum},
+                sendFinish = #{item.sendFinish},
+                afterAmount = #{item.afterAmount}
+            WHERE id = #{item.id}
+        </foreach>
+
+    </update>
+
+</mapper>

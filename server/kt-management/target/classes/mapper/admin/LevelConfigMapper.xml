@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.management.admin.dao.LevelConfigDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <select id="getLevelConfigList" resultType="cn.kt.mall.management.admin.vo.LevelConfigVO">
+        SELECT
+        l.id,
+        l.configKey,
+        l.configDesc,
+        l.amount,
+        l.configLevel
+        FROM
+        tb_level_config l
+    </select>
+
+    <update id="updateLevelConfig">
+        UPDATE tb_level_config SET amount = #{amount}, configLevel = #{configLevel}
+        WHERE
+        id=#{id}
+    </update>
+</mapper>

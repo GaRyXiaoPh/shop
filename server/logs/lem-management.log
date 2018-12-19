@@ -1,0 +1,16 @@
+2018-08-10 11:24:48.013 DEBUG 12568 --- [http-nio-10000-exec-2] c.k.m.m.l.d.L.getLogisticsVOList         : <==      Total: 263860
+2018-08-10 11:24:48.039  INFO 12568 --- [http-nio-10000-exec-2] c.k.m.m.l.c.LogisticsController          : logisticsExcelVOList1.size()=
+2018-08-10 11:24:48.047  INFO 12568 --- [http-nio-10000-exec-2] c.k.m.m.l.c.LogisticsController          : =========10000
+2018-08-10 11:24:48.843 DEBUG 12568 --- [http-nio-10000-exec-2] c.k.m.c.m.s.LoggableDispatcherServlet    : Null ModelAndView returned to DispatcherServlet with name 'loggableDispatcherServlet': assuming HandlerAdapter completed request handling
+2018-08-10 11:24:48.844  INFO 12568 --- [http-nio-10000-exec-2] c.k.m.c.m.s.LoggableDispatcherServlet    : 
+ Request Access Log:
+ POST /logistic/logisticsExport 
+ [ 
+	 query:null 
+	 header:cache-control=no-cache,postman-token=a9b309a2-150e-43f5-be9a-0b28d6fdc1a2,token=472f682b28eeb1bd107b06da830b8c36,content-type=application/json,user-agent=PostmanRuntime/3.0.11-hotfix.2,accept=*/*,host=127.0.0.1:10000,cookie=JSESSIONID=4d5ac619-e735-423c-9ec4-e3d56a14a15d,accept-encoding=gzip, deflate,content-length=2,connection=keep-alive 
+	 body:{} 
+	 responseHeader:Content-Disposition=attachment;filename=ÎïÁ÷ÉÌÆ·ÐÅÏ¢.zip,Pargam=no-cache,Cache-Control=no-cache 
+	 responseBody:[unknown]
+]
+ user times:135863ms
+2018-08-10 11:24:48.854 DEBUG 12568 --- [http-nio-10000-exec-2] c.k.m.c.m.s.LoggableDispatcherServlet    : Successfully completed request

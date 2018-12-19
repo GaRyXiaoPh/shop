@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.shop.mapper.ShopTemplateDAO">
+
+	<cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+	
+    <insert id="insert" parameterType="cn.kt.mall.shop.shop.entity.ShopTemplateEntity" flushCache="true">
+        insert into tb_shop_template(id,shopId,name,freightFree,remark, flag) values
+        (#{id},#{shopId},#{name},#{freightFree},#{remark}, #{flag})
+    </insert>
+
+    <update id="updateByIdAndShopId" parameterType="cn.kt.mall.shop.shop.entity.ShopTemplateEntity" flushCache="true">
+        update tb_shop_template set name = #{name},freightFree = #{freightFree},remark = #{remark}, flag = #{flag}
+        where id = #{id} and shopId = #{shopId}
+    </update>
+
+    <delete id="deleteById" flushCache="true">
+        delete from tb_shop_template where id = #{id} and shopId = #{shopId}
+    </delete>
+
+    <select id="listByPage" resultType="cn.kt.mall.shop.shop.entity.ShopTemplateEntity">
+        select * from tb_shop_template where shopId = #{shopId}
+    </select>
+
+    <select id="getByIdAndShopId" resultType="cn.kt.mall.shop.shop.entity.ShopTemplateEntity">
+        select * from tb_shop_template where shopId = #{shopId} and id = #{id}
+    </select>
+    
+    <select id="getByShopId" resultType="cn.kt.mall.shop.shop.entity.ShopTemplateEntity">
+        select * from tb_shop_template where shopId = #{shopId} and flag = '0'
+    </select>
+</mapper>

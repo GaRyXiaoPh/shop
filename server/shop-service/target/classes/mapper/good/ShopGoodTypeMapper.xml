@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.good.mapper.ShopGoodTypeDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <!-- 商品分类列表 -->
+    <select id="goodTypeList" parameterType="string" resultType="cn.kt.mall.shop.good.vo.GoodTypeVO" flushCache="true">
+        SELECT type.id,type.name,type.createTime,
+        (SELECT COUNT(1) FROM tb_shop_good where firstGoodType=type.id AND delFlag = 0) as goodCount
+        FROM  tb_shop_good_type type
+        <if test=" null != goodTypeName and '' != goodTypeName">
+            WHERE name LIKE CONCAT('%','${goodTypeName}','%')
+        </if>
+        order by createTime ASC
+    </select>
+    <!-- 添加商品分类 -->
+    <insert id="addGoodType" parameterType="cn.kt.mall.shop.good.vo.GoodTypeVO" flushCache="true">
+        insert into tb_shop_good_type(id, name, createTime) values (#{id}, #{name}, NOW())
+    </insert>
+
+    <!-- 修改商品分类 -->
+    <update id="editGoodType" parameterType="string" flushCache="true">
+        UPDATE tb_shop_good_type set name = #{goodTypeName} where id = #{goodTypeId}
+    </update>
+
+    <select id="listAllType" resultType="cn.kt.mall.shop.good.entity.GoodTypeEntity">
+        SELECT * from tb_shop_good_type order by sort
+    </select>
+
+</mapper>

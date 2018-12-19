@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.im.friend.mapper.HateUserDAO">
+
+    <select id="getHateUserList" parameterType="string" resultType="cn.kt.mall.im.friend.vo.FriendshipVO">
+        SELECT u.id as userId, u.`username`, r.remarkName, u.mobile, u.avatar FROM tb_user u
+        LEFT JOIN tb_im_user_remark r ON (u.id = r.userId and r.creator = #{userId})
+        WHERE
+        <choose>
+            <when test="hates != null and hates.length > 0">
+                u.id IN
+                <foreach item="item" index="index" collection="hates" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                1 != 1
+            </otherwise>
+        </choose>
+        ORDER BY
+        u.`username`,
+        r.remarkName
+    </select>
+
+    <select id="getHateList" parameterType="string" resultType="string">
+        select DISTINCT hateId FROM tb_hate_user where userId = #{userId}
+    </select>
+
+    <insert id="addHateUser" parameterType="cn.kt.mall.im.friend.entity.HateUserEntity" flushCache="true">
+        INSERT INTO tb_hate_user(id, userId, hateId, createTime)
+        VALUES(#{id}, #{userId}, #{hateId}, NOW())
+    </insert>
+
+    <delete id="deleteHateUser" parameterType="string" flushCache="true">
+        DELETE FROM tb_hate_user WHERE userId = #{userId} and hateId = #{hateId}
+    </delete>
+
+    <select id="isMyHate" parameterType="string" resultType="boolean">
+        select IF(count(1) = 0, false, true) as isHate FROM tb_hate_user where userId = #{userId} and hateId = #{hateId}
+    </select>
+
+    <select id="isHate" parameterType="string" resultType="boolean">
+        SELECT IF(SUM(t.num) > 0, TRUE, FALSE) as isHate FROM
+        (select MAX(1) as num from tb_hate_user where userId = #{userId} and hateId = #{hateId}
+        UNION
+        select MAX(10) as num from tb_hate_user where userId = #{hateId} and hateId = #{userId}) t
+    </select>
+
+    <insert id="addBathHate" parameterType="list" flushCache="true">
+        INSERT INTO tb_hate_user(id, userId, hateId, createTime)
+        VALUES
+        <foreach item="item" index="index" collection="hates" separator=",">
+            (#{item.id}, #{item.userId}, #{item.hateId}, NOW())
+        </foreach>
+    </insert>
+    
+    <delete id="deleteBathHate" parameterType="string" flushCache="true">
+        DELETE FROM tb_hate_user WHERE userId = #{userId}
+        <choose>
+            <when test="hates != null and hates.length > 0">
+                and hateId IN
+                <foreach item="item" index="index" collection="hates" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </when>
+            <otherwise>
+                and 1 != 1
+            </otherwise>
+        </choose>
+    </delete>
+
+    <select id="getHateMeUserIds" parameterType="string" resultType="string">
+        select userId from tb_hate_user where hateId = #{userId}
+    </select>
+
+</mapper>

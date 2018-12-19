@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>云通宝</title>
+    <SCRIPT type="text/javascript">
+        var configs = {
+            front: {
+                port: "8088",
+                url: "swagger-ui.html",
+                testUrl: "http://47.92.118.152/msc-front/swagger-ui.html",
+                title: "LEM-移动端 & 网站 API Docs"
+            },
+            management: {
+                port: "8088",
+                url: "swagger-ui.html",
+                testUrl: "http://47.92.118.152/msc-management/swagger-ui.html",
+                title: "LEM-管理端 API Docs"
+            },
+            management: {
+                port: "8088",
+                url: "swagger-ui.html",
+                testUrl: "http://47.92.118.152/msc-offline/swagger-ui.html",
+                title: "LEM-线下管理后台 API Docs"
+            }
+        };
+        function ready() {
+            var links = document.getElementsByTagName("a");
+            for(var i in links) {
+                var link = links[i];
+                var key = link.id;
+                var conf = configs[key];
+                if(!conf) {
+                    continue;
+                }
+
+                if(location.hostname === "47.92.118.152") {
+                    link.href = conf.testUrl;
+                } else {
+                    link.href = "http://" + location.hostname + ":" + (typeof(conf.port) === "function" ? conf.port() : conf.port) + "/" + conf.url;
+                }
+
+                link.innerHTML = conf.title;
+            }
+        }
+    </SCRIPT>
+</head>
+<body style="text-align: center;" onload="ready()">
+    <h2>云通宝 API文档</h2>
+    <h2>
+        <a id="front">&nbsp;</a>
+    </h2>
+    <h2>
+        <a id="management">&nbsp;</a>
+    </h2>
+</body>
+</html>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.common.bitcoin.mapper.BtcTransactionDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <insert id="add" parameterType="cn.kt.mall.common.bitcoin.entity.BtcTransactionEntity" flushCache="true">
+        REPLACE INTO btc_transaction(hash, block, `from`, `to`, amount, recvTime, createTime)
+        VALUES ( #{hash}, #{block}, #{from}, #{to}, #{amount}, #{recvTime}, NOW())
+    </insert>
+
+    <select id="getTransaction" parameterType="string" resultType="cn.kt.mall.common.bitcoin.entity.BtcTransactionEntity">
+        SELECT * FROM btc_transaction WHERE hash=#{hash}
+    </select>
+
+
+
+</mapper>

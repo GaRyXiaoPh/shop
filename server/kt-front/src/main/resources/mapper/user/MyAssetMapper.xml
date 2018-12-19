@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.front.user.mapper.MyAssetMapper">
+
+    <!--<cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+
+    <!-- 查询我的资产 -->
+    <select id="queryMyAsset" resultType="cn.kt.mall.front.user.vo.MyAssetVO">
+        select * from tb_user_asset where userId = #{userId,jdbcType=VARCHAR}
+
+    </select>
+    <!-- 查询我的余额-->
+    <select id="getMyAsset" resultType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+        select * from tb_user_asset where userId = #{userId,jdbcType=VARCHAR} and currency = 'point'
+    </select>
+    <!-- 查询我的优惠券资产-->
+    <select id="getMyAssetPopc" resultType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+        select * from tb_user_asset where userId = #{userId,jdbcType=VARCHAR} and currency = 'popc'
+    </select>
+    <!-- 查询我的余额明细-->
+    <select id="getMyAssetStatementList" resultType="cn.kt.mall.common.wallet.entity.StatementEntity">
+        SELECT
+            *
+        FROM
+            tb_user_statement us
+        WHERE
+            us.userId =  #{userId,jdbcType=VARCHAR}
+            and currency = 'point'
+            and status = '2'
+        order by us.createTime DESC
+    </select>
+    <!-- 查询交易记录长度 -->
+    <select id="queryDealCount" resultType="int">
+        select count(1) from tb_shop_trade WHERE buyUserId = #{userId,jdbcType=VARCHAR}
+    </select>
+    <!-- 查询交易列表 -->
+    <select id="queryDealByUserID" resultType="cn.kt.mall.front.user.vo.MyAssetInfoVO">
+        SELECT id,'消费' AS title,concat('余额', (CASE WHEN point>0 THEN '-' ELSE '' END),point) AS firstOperation,
+            'green' AS firstOperationColor,concat('可用POPC',(CASE WHEN coined>0 THEN '-' ELSE '' END),coined) AS secondOperation,
+            'green' AS secondOperationColor,createTime from tb_shop_trade
+        WHERE buyUserId = #{userId,jdbcType=VARCHAR} order by createTime desc Limit #{offset},#{pageSize}
+    </select>
+
+    <!-- 查询提币记录长度 -->
+    <select id="queryCashCount" resultType="int">
+        select count(1) from tb_user_cash_log WHERE userId = #{userId,jdbcType=VARCHAR}
+    </select>
+    <!-- 查询提币列表 -->
+    <select id="queryCashByUserID" resultType="cn.kt.mall.front.user.vo.MyAssetInfoVO">
+        SELECT id, (CASE status WHEN 2 THEN '提币拒绝' ELSE '提币' END)  AS title,  createTime,
+               concat('可用POPC',(CASE status WHEN 2 THEN '+' ELSE '-' END),cashAmount ) AS firstOperation,
+               (CASE status WHEN 2 THEN 'red' ELSE 'green' END)  AS firstOperationColor
+        FROM tb_user_cash_log
+        WHERE userId = #{userId,jdbcType=VARCHAR} order by createTime desc Limit #{offset},#{pageSize}
+    </select>
+
+    <!-- 查询充币&扣除记录长度 -->
+    <select id="queryRechargeCount" resultType="int">
+        select count(1) from tb_user_recharge_log WHERE rechargeUser = #{userId,jdbcType=VARCHAR}
+    </select>
+    <!-- 查询充币&扣除列表 -->
+    <select id="queryRechargeByUserID" resultType="cn.kt.mall.front.user.vo.MyAssetInfoVO">
+        SELECT id,
+            concat((CASE rechargeType WHEN 'point' THEN '现金' ELSE 'POPC' END),(CASE operationType WHEN 1 THEN '充值' ELSE '扣除' END)) AS title,
+            concat('可用',(CASE rechargeType WHEN 'point' THEN '现金' ELSE 'POPC' END),(CASE operationType WHEN 1 THEN '+' ELSE '-' END),rechargeAmount) AS firstOperation,
+            (CASE operationType WHEN 1 THEN 'red' ELSE 'green' END)  AS firstOperationColor,
+            createTime
+        FROM tb_user_recharge_log
+        WHERE rechargeUser = #{userId,jdbcType=VARCHAR} and status!=2 order by createTime desc Limit #{offset},#{pageSize}
+    </select>
+
+    <!-- 查询冻结记录长度 -->
+    <select id="queryUnfreezeCount" resultType="int">
+        select count(1) from tb_user_statement WHERE userId  = #{userId,jdbcType=VARCHAR}
+    </select>
+    <!-- 查询冻结记录列表 -->
+    <select id="queryUnfreezeByUserID" resultType="cn.kt.mall.front.user.vo.MyAssetInfoVO">
+        SELECT id,(CASE currency WHEN 'popc' THEN 'POPC解冻' ELSE '积分解冻' END)  AS title,
+                  concat('冻结', (CASE currency WHEN 'popc' THEN CONCAT('POPC',reservedChange) ELSE CONCAT('积分',reservedChange)  END)) AS firstOperation,
+                  'green' AS firstOperationColor,
+                  concat('可用', (CASE currency WHEN 'popc' THEN CONCAT('POPC+',ABS(reservedChange)) ELSE CONCAT('积分+',ABS(reservedChange))  END)) AS secondOperation,
+                  'red' AS secondOperationColor,createTime
+        FROM tb_user_statement WHERE userId = #{userId,jdbcType=VARCHAR} AND tradeType = 7 order by createTime desc Limit #{offset},#{pageSize}
+    </select>
+
+</mapper>

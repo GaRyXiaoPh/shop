@@ -1,0 +1,133 @@
+server:
+  port: 9000
+
+spring:
+  application:
+    name: lem-shop
+  profiles:
+    active: test
+  jackson:
+    time-zone: GMT+8
+  http:
+    encoding:
+      force: true
+      charset: UTF-8
+      enabled: true
+  output:
+    ansi:
+      enabled: DETECT
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    url: jdbc:mysql://47.75.116.55:3306/kt?autoReconnect=true&maxReconnects=10&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&transformedBitIsBoolean=true&zeroDateTimeBehavior=convertToNull&serverTimezone=Hongkong&useSSL=false
+    username: kt
+    password: kt_8888
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    minIdle: 5
+    maxActive: 20
+    initialSize: 5
+    maxWait: 60000
+    timeBetweenEvictionRunsMillis: 60000
+    minEvictableIdleTimeMillis: 300000
+    validationQuery: SELECT 'MQ' FROM DUAL
+    testWhileIdle: true
+    testOnBorrow: true
+    testOnReturn: false
+    poolPreparedStatements: true
+    maxPoolPreparedStatementPerConnectionSize: 20
+  redis:
+    host: 47.75.100.17
+    database: 0
+    port: 7003
+    password: redis
+    pool:
+      max-idle: 50
+      max-active: 200
+      max-wait: 1000
+    sentinel:
+      master: mymaster
+      nodes: redis@47.75.100.17:26371,redis@47.75.100.17:26372
+
+########################## mybatis ##########################
+mybatis:
+  mapperLocations: classpath*:mapper/**/*Mapper.xml
+  typeAliasesPackage: cn.wqt.lem.**.entity
+  configLocation: classpath:config/mybatis-config.xml
+pagehelper:
+  helperDialect: mysql
+  reasonable: false
+  supportMethodsArguments: true
+  rowBoundsWithCount: true
+  offsetAsPageNum: true
+
+########################## sms ##########################
+sms:
+  require: false
+  url: http://47.92.118.152/msg/
+  account: vip_wqt_lmsc
+  pswd: Lmsc123456
+  product: 141-92
+  template:
+    verification:
+      register: '您正在注册新账号，验证码%@%。妥善保管，请勿转发'
+      forget: '您正在进行忘记密码操作，验证码%@%。妥善保管，请勿转发'
+
+international-sms:
+  account: I2376600
+  password: GBcrUoQYNdfcf1
+
+########################## static ##########################
+static:
+  baseUrl: 'http://47.92.118.152/lem-static/'
+
+########################## log ##########################
+logging:
+  config: classpath:config/log/log-test.xml
+  file: ./logs/lem-shop.log
+
+########################## jwt ##########################
+jwt:
+  expire: 604800 #7 day
+  secret: 'E9RVCdd9TfmxT9v1K+aDvlY0N8y2fsRNXz8oBrR2D+0='
+  publicKey: 'MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCVT+pLc1nkz9z803SOmF48bMFn0GYF4ng6nxj0ojUeu4KeNKkkw/nfureTtL77j9RpMjquJzzKdOZfHRvQyuAbaLoaSD1uU47npNiAL05bLYZEoZWvFOar9gNbIesea8MX0DeYncA2Tkr3kUo8K6XBrZ+TcV2Q8NEvm1T536LOGwIDAQAB'
+  privateKey: 'MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAJVP6ktzWeTP3PzTdI6YXjxswWfQZgXieDqfGPSiNR67gp40qSTD+d+6t5O0vvuP1GkyOq4nPMp05l8dG9DK4BtouhpIPW5Tjuek2IAvTlsthkShla8U5qv2A1sh6x5rwxfQN5idwDZOSveRSjwrpcGtn5NxXZDw0S+bVPnfos4bAgMBAAECgYAgiwZ5425YXKXBxSTGX5dKfDm7MsTJy46A2GRMDX6ecCgL61ZiWQSBKuUQIHjvw218cCIyCwNI7Sm42VNSsqUdfYHZc5OLfhyRKJMumXDsp+TmBGRq1rWTxjaIPz5ayjYlpdgSAhmR6z6GXbkuqjVp+RuN9NjbzB1Tssgbj7nwwQJBAOu0g363QykQXuRWjdp9xn7SyirZH2UuRrHRI33Y7MgRWjJ0aVyFy93NUWhvIlL9egNI0W98pnnDbyCw1BKYYYkCQQCiKxnO9F7lPfSxziqYf1Hs+HrxR8tY04Vi+x3NGh1pwMw9qz5FQBQu9aB94vrQ6d8rfo/RcDW4fDo0UXLegX2DAkEAt9uSKtjnEXQMoQ6HDmTH3gus2WmOHM3RJUle5v68DH/EnNDDkwFm+ff7RXxTCOtiLoexnsZb0WVKHPTyKCMnCQJAO0NhBR6M513C5I+hRWWR/PW5iB9ikq2KG2gFtgSLJzCL8yV3djs6pQaihh7C5kHxiqWPzUwida8AXko9nk7YHQJABdHSS9ryht2s+dCoPS/ePzFQr6hkjX0yE1bLvd9Gqjb6eNLUl8KlbaUItNi0rn64gJtY22+fk62r+DxEpwtTFg=='
+
+lem:
+  host: 47.92.73.26
+  port: 18753
+  username: user
+  password: pass
+
+mq:
+  conn:
+    brokerURLs: tcp://120.79.145.234:61616
+    username: admin
+    password: admin
+    max:
+      retry: 6
+    retry:
+      delay:
+        seconds: 1
+    useAsyncSend: true
+    alwaysSessionAsync: false
+    optimizeAcknowledge: true
+    producerWindowSize: 1024000
+
+sys:
+  platform_account: c20084fb-fbf2-42ef-b9d9-7c1cf94b4d68
+
+sharding.jdbc.datasource.names: ds_0,ds_1
+
+sharding.jdbc.datasource.ds_0.type: com.alibaba.druid.pool.DruidDataSource
+sharding.jdbc.datasource.ds_0.driver-class-name: com.mysql.jdbc.Driver
+sharding.jdbc.datasource.ds_0.url: jdbc:mysql://47.75.116.55:3306/kt
+sharding.jdbc.datasource.ds_0.username: kt
+sharding.jdbc.datasource.ds_0.password: kt_8888
+
+sharding.jdbc.datasource.ds_1.type: com.alibaba.druid.pool.DruidDataSource
+sharding.jdbc.datasource.ds_1.driver-class-name: com.mysql.jdbc.Driver
+sharding.jdbc.datasource.ds_1.url: jdbc:mysql://47.75.116.55:3307/kt
+sharding.jdbc.datasource.ds_1.username: kt
+sharding.jdbc.datasource.ds_1.password: kt_8888
+
+sharding.jdbc.config.sharding.master-slave-rules.0.master-data-source-name: ds_0
+sharding.jdbc.config.sharding.master-slave-rules.0.slave-data-source-names: ds_1

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="cn.kt.mall.shop.logistics.mapper.LogisticsMapper">
+	<resultMap id="BaseResultMap"
+		type="cn.kt.mall.shop.logistics.entity.Logistics">
+		<id column="id" property="id" jdbcType="BIGINT" />
+		<result column="logistics_no" property="logisticsNo"
+			jdbcType="VARCHAR" />
+		<result column="com" property="com" jdbcType="VARCHAR" />
+		<result column="logistics_status" property="logisticsStatus" />
+	</resultMap>
+
+	<sql id="Base_Column_List">
+		id,logistics_no,com,logistics_status
+	</sql>
+
+	<select id="selectLogistics" resultMap="BaseResultMap">
+		SELECT
+		<include refid="Base_Column_List" />
+		FROM
+		tb_logistics
+		WHERE
+		logistics_no = #{logisticsNo}
+	</select>
+
+	<select id="getLogisticsCount" resultType="java.lang.Integer">
+		SELECT
+		count(1)
+		FROM
+		tb_logistics
+		WHERE
+		logistics_no = #{logisticsNo} and COM = #{com}
+	</select>
+
+	<insert id="addLogistics"
+		parameterType="cn.kt.mall.shop.logistics.entity.Logistics">
+		INSERT into tb_logistics
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="logisticsNo != null"> logistics_no, </if>
+			<if test="com != null">com, </if>
+			<if test="logisticsStatus != null">logistics_status, </if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="logisticsNo != null">#{logisticsNo},</if>
+			<if test="com != null">#{com},</if>
+			<if test="logisticsStatus != null">
+				#{logisticsStatus},
+			</if>
+		</trim>
+	</insert>
+
+	<update id="updateLogisticsStatus">
+		UPDATE
+		tb_logistics
+		SET
+		logistics_status =
+		#{logisticsStatus}
+		WHERE
+		logistics_no = #{logisticsNo}
+	</update>
+
+</mapper>

@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.management.admin.dao.TbCouponDAO">
+
+    <!--<cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+    <select id="getCouponsList"  resultType="cn.kt.mall.management.admin.entity.CouponEntity">
+          SELECT * FROM tb_coupon  where 1=1 ORDER BY createTime DESC
+    </select>
+
+    <insert id="addCoupon" parameterType="cn.kt.mall.management.admin.entity.CouponEntity">
+        insert into tb_coupon(id, couponName, unit,createTime,ratio,sendDays,couponType,isSend,isDocking) values
+            (#{id}, #{couponName},  #{unit}, #{createTime},  #{ratio}, #{sendDays}, #{couponType},  #{isSend}, #{isDocking})
+    </insert>
+
+    <!--更新用户优惠券-->
+    <update id="updateCouponById" parameterType="cn.kt.mall.management.admin.entity.CouponEntity" flushCache="true">
+        UPDATE tb_coupon
+        <set>
+
+            <if test="ratio != null and ratio != ''">
+                ratio = #{ratio},
+            </if>
+            <if test="sendDays != null">
+                sendDays = #{sendDays},
+            </if>
+            <if test="couponType != null">
+                couponType = #{couponType},
+            </if>
+
+            <if test="isSend != null">
+                isSend = #{isSend},
+            </if>
+            <if test = "isDocking !=null">
+                isDocking = #{isDocking},
+            </if>
+            <if test="couponName != null and couponName != ''">
+                couponName = #{couponName},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateCoupon4sendDays" parameterType="cn.kt.mall.management.admin.entity.CouponEntity" flushCache="true">
+        UPDATE tb_coupon
+        SET
+        <if test="sendDays != null and sendDays != ''">
+            sendDays = #{sendDays}
+        </if>
+        WHERE id = #{id}
+    </update>
+
+    <!--删除优惠券-->
+    <delete id="deleteCouponByIds" parameterType="java.util.List">
+        DELETE FROM tb_coupon
+        WHERE
+        id IN
+        <foreach collection="idsList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <select id="getCouponEntityById" parameterType="string" resultType="cn.kt.mall.management.admin.entity.CouponEntity">
+
+        select * from tb_coupon where id = #{id}
+
+    </select>
+
+
+    <select id="getCouponEntityBySendDay" resultType="cn.kt.mall.management.admin.entity.CouponEntity">
+
+        select * from tb_coupon where isSend=1
+
+    </select>
+    <select id="getReturnCoupon" resultType="cn.kt.mall.management.admin.vo.UserStatementVO">
+        SELECT
+            l.createTime AS createTime,
+            l.rechargeNum AS amount,
+            l.userId AS userId,
+            l.relationUserId AS relationUserId,
+            l.ratio AS returnRatio,
+            l.totalCny AS totalPrice,
+            l.totalRaisePrice AS totalRaisePrice
+        FROM
+            tb_user_coupon_log l
+        WHERE
+            l.goodId = '0'
+        AND l.tradeId = '0'
+        AND l.couponId = '87916019-19e1-4383-8539-a7a972134d81'
+        <if test="beginTime != null and beginTime!=''">
+            <![CDATA[ AND l.createTime >= #{beginTime}]]>
+        </if>
+        <if test="endTime != null and endTime!=''">
+            <![CDATA[ AND l.createTime <= #{endTime}]]>
+        </if>
+        ORDER BY l.createTime DESC
+      <!--  SELECT
+        l.userId AS userId,
+        l.relationUserId AS relationUserId,
+        l.amount AS amount,
+        l.returnRatio AS returnRatio,
+        t.createTime AS createTime,
+        t.totalPrice as totalPrice
+        FROM
+        tb_user_return_coupon_log l
+        LEFT JOIN tb_shop_trade t ON l.tradeId = t.id
+        WHERE 1=1
+        <if test="beginTime != null and beginTime!=''">
+            <![CDATA[ AND t.createTime >= #{beginTime}]]>
+        </if>
+        <if test="endTime != null and endTime!=''">
+            <![CDATA[ AND t.createTime <= #{endTime}]]>
+        </if>
+        ORDER BY t.createTime DESC-->
+    </select>
+    <select id="getCouponListByIsDocking" resultType="cn.kt.mall.management.admin.entity.CouponEntity">
+
+        select * from tb_coupon where isDocking = #{isDocking}
+
+    </select>
+    <!--获取游戏彩票提取记录-->
+    <select id="getExtractList" resultType="cn.kt.mall.management.admin.vo.ExtractVO" parameterType="cn.kt.mall.management.admin.vo.ExtractVO">
+        SELECT
+            l.id AS id,
+            l.createTime AS createTime,
+            l.applyNum AS amount,
+            l.ratio AS ratio,
+            l.userId AS userId,
+            l.auditStatus AS status,
+            cc.couponName AS couponName,
+            l.couponId AS couponId,
+            l.poundage AS poundage,
+            l.arriveAccount AS arriveAccount,
+            l.operateType AS operateType
+        FROM
+            tb_user_extract_coupon_log l,
+            tb_coupon cc
+        WHERE
+            cc.isDocking = '1'
+        and
+            l.couponId = cc.id
+        <if test="beginTime != null and beginTime!=''">
+            and l.createTime <![CDATA[ >= ]]> #{beginTime}
+        </if>
+        <if test="endTime != null and endTime!=''">
+            and l.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="mobile != null and mobile!=''">
+            and l.userId = (SELECT u.id FROM tb_user u WHERE u.mobile = #{mobile})
+        </if>
+        <if test="type != null and type!=''">
+            and l.couponId = #{type}
+        </if>
+        <if test="status != null and status!=''">
+            and l.auditStatus = #{status}
+        </if>
+        <if test="operateType != null and operateType!=''">
+            and l.operateType = #{operateType}
+        </if>
+        ORDER BY l.createTime DESC
+    </select>
+    <!--根据主键id查询彩票、游戏积分提取记录-->
+    <select id="getExtractById" resultType="cn.kt.mall.management.admin.vo.ExtractVO">
+      SELECT
+            l.id AS id,
+            l.createTime AS createTime,
+            l.applyNum AS amount,
+            l.ratio AS ratio,
+            l.userId AS userId,
+            l.auditStatus AS status,
+            l.couponId AS couponId,
+            l.poundage AS poundage
+      FROM
+          tb_user_extract_coupon_log l
+       WHERE l.id = #{id}
+    </select>
+    <!--根据优惠券id与用户id查询用户该优惠券可用数-->
+    <select id="getUserCouponByUserIdAndTypeForUpdate" resultType="cn.kt.mall.shop.coupon.entity.UserCouponEntity">
+        SELECT * FROM tb_user_coupon WHERE userId=#{userId} and couponId=#{couponId} for UPDATE
+    </select>
+    <!--根据优惠券id与用户id更新用户该优惠券可用数-->
+    <update id="updateCouponByUserIdAndCouponNum" parameterType="cn.kt.mall.shop.coupon.entity.UserCouponEntity" flushCache="true">
+        UPDATE tb_user_coupon SET
+
+        <if test="couponNum!=null">
+            couponNum=#{couponNum}
+        </if>
+        <if test="couponNum!=null and currentExtractNum!=null">
+            ,
+        </if>
+        <if test="currentExtractNum!=null">
+            currentExtractNum=#{currentExtractNum}
+        </if>
+
+        WHERE userId=#{userId} and couponId=#{couponId}
+    </update>
+    <!--更新提取彩票游戏积分提取日志-->
+    <update id="updateLogStatus" parameterType="String" flushCache="true">
+        UPDATE tb_user_extract_coupon_log
+        <set>
+        <if test="operatorUserId!=null and operatorUserId!=''">
+            operatorUserId = #{operatorUserId},
+        </if>
+
+        <if test="status!=null and status!=''">
+            auditStatus=#{status},
+        </if>
+        <if test="applyNumBefore!=null">
+            applyNumBefore = #{applyNumBefore},
+        </if>
+
+        <if test="applyNumAfter!=null">
+            applyNumAfter=#{applyNumAfter},
+        </if>
+        <if test="operatorTime!=null">
+            operatorTime = #{operatorTime},
+        </if>
+        </set>
+        WHERE id=#{id}
+    </update>
+    <select id="getUserCouponList" parameterType="string" resultType="cn.kt.mall.common.user.vo.UserCouponVO">
+        SELECT
+            IFNULL(
+                    (CASE
+                     WHEN c.couponName='优惠券' THEN
+                         a.availableBalance
+                     ELSE
+                         u.couponNum
+                     END),0) as couponNum ,
+            IFNULL (
+                    (CASE
+                     WHEN c.couponName='优惠券'  THEN
+                         a.reservedBalance
+                     ELSE
+                         u.reservedCouponNum
+                     END), 0) as currentExtractNum
+            ,c.couponName
+        from tb_coupon c
+            LEFT JOIN tb_user_asset a ON a.userId = #{userId} and a.currency = 'popc'
+            LEFT JOIN tb_user_coupon u ON u.userId = #{userId} and u.couponId = c.id and c.couponName != '优惠券'
+        ORDER BY c.createTime desc
+    </select>
+    <!--根据优惠券id与用户id查询用户该优惠券可用数-->
+    <select id="getUserCouponByUserIdAndType" resultType="cn.kt.mall.shop.coupon.entity.UserCouponEntity">
+        SELECT * FROM tb_user_coupon WHERE userId=#{userId} and couponId=#{couponId}
+    </select>
+
+</mapper>

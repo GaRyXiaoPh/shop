@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.trade.mapper.TradeLogDAO">
+
+    <insert id="insert" parameterType="cn.kt.mall.shop.trade.entity.TradeLogEntity">
+        insert into tb_shop_trade_log(shopId,tradeId,logType,logCode,logValue,logImg1,logImg2,logImg3,logValue1,logValue2,status) values
+        (#{shopId},#{tradeId},#{logType},#{logCode},#{logValue},#{logImg1},#{logImg2},#{logImg3},#{logValue1},#{logValue2},#{status})
+    </insert>
+    
+    <insert id="insertBatch" parameterType="cn.kt.mall.shop.trade.entity.TradeLogEntity">
+        insert into tb_shop_trade_log(shopId,tradeId,logType,logCode,logValue,logImg1,logImg2,logImg3,logValue1,logValue2,status) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.shopId},#{item.tradeId},#{item.logType},#{item.logCode},#{item.logValue},
+            #{item.logImg1},#{item.logImg2},#{item.logImg3},#{item.logValue1},#{item.logValue2},#{item.status})
+        </foreach>
+    </insert>
+    <insert id="insertTradeLogEntity" parameterType="cn.kt.mall.shop.trade.entity.TradeLogEntity">
+        insert into tb_shop_trade_log(shopId,tradeId,logType,logCode,logValue,logImg1,logImg2,logImg3,logValue1,logValue2,status) values
+            (#{shopId},#{tradeId},#{logType},#{logCode},#{logValue},
+            #{logImg1},#{logImg2},#{logImg3},#{logValue1},#{logValue2},#{status})
+    </insert>
+    <delete id="deleteById" parameterType="string">
+        delete from tb_shop_trade_log where id = #{id}
+    </delete>
+
+    <select id="listByPageCount" parameterType="string">
+        select count(1) from tb_shop_trade_log where shopId = #{shopId} and tradeId = #{tradeId}
+    </select>
+
+    <select id="listByPage" resultType="cn.kt.mall.shop.trade.entity.TradeLogEntity">
+        select * from tb_shop_trade_log where shopId = #{shopId} and tradeId = #{tradeId}
+        limit #{offset},#{pageSize}
+    </select>
+
+    <select id="getById" resultType="cn.kt.mall.shop.trade.entity.TradeLogEntity">
+        select * from tb_shop_trade_log where tradeId = #{tradeId} and logCode = #{logCode}
+        <if test="shopId != null and shopId != ''">and shopId = #{shopId}</if>
+    </select>
+
+    <select id="getByTradeId" resultType="cn.kt.mall.shop.trade.entity.TradeLogEntity">
+        select * from tb_shop_trade_log where tradeId = #{tradeId}
+    </select>
+
+    <select id="getByTradeIds" resultType="cn.kt.mall.shop.trade.entity.TradeLogEntity">
+        select * from tb_shop_trade_log where tradeId in
+        <foreach collection="tradeIds" item="tradeId" separator="," open="(" close=")">
+            #{tradeId}
+        </foreach>
+    </select>
+    
+    <update id="updateSelectiveById" parameterType="cn.kt.mall.shop.trade.entity.TradeLogEntity">
+    	update tb_shop_trade_log
+    	<set>
+    		<if test="status != null">status = #{status},</if>
+    		<if test="logValue1 != null and logValue1 != ''">logValue1 = #{logValue1},</if>
+    		<if test="logValue2 != null and logValue2 != ''">logValue2 = #{logValue2},</if>
+    	</set>
+    	where tradeId = #{tradeId} and logCode = #{logCode}
+        <if test="shopId != null and shopId != ''">and shopId = #{shopId}</if>
+    </update>
+    
+	<select id="countAbnormal" resultType="int">
+		select count(1) from tb_shop_trade_log
+		where status = #{status} and shopId = #{shopId} and logCode = #{logCode}
+	</select>
+</mapper>

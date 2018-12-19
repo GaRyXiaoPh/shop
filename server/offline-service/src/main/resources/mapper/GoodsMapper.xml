@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.offline.dao.GoodsDAO">
+    <!--添加商品-->
+    <insert id="addGoods" parameterType="cn.kt.mall.offline.entity.GoodEntity">
+        INSERT INTO
+             tb_circle_goods
+             (id,shopId,userId, NAME, price)
+        VALUES
+            (#{id},#{shopId},#{userId},#{name},#{price})
+
+    </insert>
+    <!--添加商品图片信息-->
+    <insert id="addGoodPic" parameterType="cn.kt.mall.offline.entity.GoodEntity">
+        INSERT INTO
+             tb_circle_goods_pic
+             (good_id, type, url,is_main)
+        VALUES
+            (#{id},#{type},#{url},#{isMain})
+    </insert>
+    <!--更新商品信息-->
+    <update id="updateGoodInfo" parameterType="cn.kt.mall.offline.entity.GoodEntity">
+        update tb_circle_goods
+        <set>
+            <if test="name != null and name != '' ">
+                name = #{name},
+            </if>
+            <if test="price != null">
+                price = #{price},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+        </set>
+        <where>
+            id = #{id}
+        </where>
+    </update>
+    <!--删除商品-->
+    <delete id="delGood" parameterType="string">
+        delete from tb_circle_goods where id = #{id}
+    </delete>
+
+    <!--删除商品图片信息-->
+    <delete id="deleteGoodPic" parameterType="string">
+        delete  from tb_circle_goods_pic where good_id = #{id}
+    </delete>
+
+    <!--查看商品列表-->
+    <select id="getGoodsList" resultType="cn.kt.mall.offline.entity.GoodEntity">
+        select * from tb_circle_goods where userId = #{userId}
+        <if test="name != null and name != ''">
+            and name like concat('%', #{name}, '%')
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+        limit #{offset},#{pageSize}
+    </select>
+
+    <select id="getGoodsListCount" resultType="int">
+        select count(1) from tb_circle_goods where userId = #{userId}
+        <if test="name != null and name != ''">
+            and name like concat('%', #{name}, '%')
+        </if>
+        <if test="status != null">
+            and status = #{status}
+        </if>
+    </select>
+    <!--查看商品详情-->
+    <select id="getGoodDetail" parameterType="string" resultType="cn.kt.mall.offline.entity.GoodEntity">
+        select
+            *
+        from
+            tb_circle_goods
+        where
+            id = #{id}
+        limit 0,1
+    </select>
+    <!--查询商品图片列表-->
+    <select id="getPicList" resultType="cn.kt.mall.offline.entity.PicEntity">
+        select url,is_main AS isMain from tb_circle_goods_pic  where good_id = #{id} and type = #{type}
+    </select>
+
+    <!--商品管理-->
+    <select id="getGoodNum" resultType="cn.kt.mall.offline.entity.DataEntity">
+        select `status`,count(id) AS num from tb_circle_goods  where  userId= #{userId} group by `status`
+    </select>
+
+    <!--线下商品管理-->
+    <select id="getOffGoods" parameterType="cn.kt.mall.offline.vo.OffGoodVO" resultType="cn.kt.mall.offline.entity.GoodEntity">
+        SELECT
+            t1.id,
+            t1.name,
+            t3.url ,
+            t1.price,
+            t1.create_time AS createTime,
+            t1.`status`,
+            t2.shopName
+        FROM tb_circle_goods t1
+        INNER JOIN tb_shop_shop t2 ON t1.shopId = t2.id
+        INNER JOIN tb_circle_goods_pic t3 ON t1.id = t3.good_id AND t3.`type` = 0 AND t3.is_main = 0
+        where 1=1
+        <if test="name != null and name != ''">
+            and t1.name like concat('%',#{name},'%')
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and t1.create_time <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and t1.create_time <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="status != null">
+            and t1.`status` = #{status}
+        </if>
+        Limit #{pageNo},#{pageSize}
+    </select>
+
+    <select id="getOffGoodsCount" resultType="int">
+        SELECT count(1)  FROM tb_circle_goods
+    </select>
+    
+    <select id="countByStatus" resultType="int">
+    	SELECT count(1)  FROM tb_circle_goods where status = #{status}
+    </select>
+</mapper>

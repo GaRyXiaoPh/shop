@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.front.version.dao.AppVersionDAO">
+
+    <select id="getLastVersion" resultType="cn.kt.mall.front.version.vo.VersionVO">
+        SELECT `code`, versionName, platform, url, `force`, content FROM tb_app_version WHERE platform = #{platform} ORDER  BY `code` DESC LIMIT 0,1
+    </select>
+
+</mapper>

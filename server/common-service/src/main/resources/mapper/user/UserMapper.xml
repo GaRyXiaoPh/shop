@@ -1,0 +1,593 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.common.user.dao.UserDAO">
+
+    <!--<cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+
+    <insert id="add" parameterType="cn.kt.mall.common.user.entity.UserEntity" flushCache="true">
+        INSERT INTO tb_user(id, username, nationalCode, mobile, password, salt, nick, referrer, `level`, pid,status, transactionPassword,standNo,xin,createTime)
+        VALUES(#{id}, #{username}, #{nationalCode}, #{mobile}, #{password}, #{salt}, #{nick}, #{referrer}, '1',#{pid}, '0', '0',#{standNo}, #{xin},NOW())
+    </insert>
+
+    <insert id="addBankMessage" parameterType="cn.kt.mall.common.user.entity.BankCardEntity" flushCache="true">
+        INSERT INTO tb_user_bankcard(userId, trueName,  bankCard, bankName, openBank,createTime)
+        VALUES(#{userId}, #{trueName}, #{bankCard}, #{bankName}, #{openBank},NOW())
+    </insert>
+    <update id="updateBankMessage" parameterType="cn.kt.mall.common.user.entity.BankCardEntity" flushCache="true">
+        UPDATE tb_user_bankcard SET trueName = #{trueName}, bankCard = #{bankCard}, bankName = #{bankCard}, openBank = #{openBank}, updateTime = NOW() WHERE userId = #{userId}
+    </update>
+    <insert id="addCertificationMessage" parameterType="cn.kt.mall.common.user.entity.CertificationEntity"
+            flushCache="true">
+        INSERT INTO tb_user_certification(userId, trueName,cardId,faceImg,conImg,holdImg,createTime,status,certificateType)
+        VALUES(#{userId}, #{trueName}, #{cardId},#{faceImg},#{conImg},#{holdImg},NOW(),#{status},#{type})
+    </insert>
+    <update id="updatCertificationMessage" parameterType="cn.kt.mall.common.user.entity.CertificationEntity"
+            flushCache="true">
+        UPDATE tb_user_certification SET faceImg = #{faceImg},conImg = #{conImg},holdImg = #{holdImg}, updateTime = NOW(),status= #{status} WHERE userId = #{userId}
+    </update>
+    <update id="updatePassword" parameterType="string" flushCache="true">
+        UPDATE tb_user SET password = #{password}, salt = #{salt}, lastTime = NOW() WHERE id = #{id}
+    </update>
+    <update id="editTransactionPassword" parameterType="string" flushCache="true">
+        UPDATE tb_user SET transactionPassword = #{transactionPassword}, transcationSalt = #{transcationSalt}, lastTime = NOW() WHERE id = #{id}
+    </update>
+    <update id="addTransactionPassword" parameterType="string" flushCache="true">
+        UPDATE tb_user SET transactionPassword = #{transactionPassword}, transcationSalt = #{transcationSalt}, lastTime = NOW() WHERE id = #{id}
+    </update>
+    <select id="getById" parameterType="string" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT
+            ta.*, ua.availableBalance AS point,tuc.certificateType,IFNULL(uc.userLevel,1) AS userlevel
+        FROM
+            tb_user ta
+        LEFT JOIN tb_user_asset ua ON ua.userId = ta.id
+        left JOIN tb_user_consume uc on uc.userId = ta.id
+        left JOIN tb_user_certification tuc on tuc.userId = ta.id
+        WHERE
+	        ta.id =  #{id}
+	    AND ua.currency = 'point'
+        LIMIT 0,1
+    </select>
+    <select id="getCertificationMessage" parameterType="string"
+            resultType="cn.kt.mall.common.user.entity.CertificationEntity">
+        select * from tb_user_certification where userId =  #{userId} limit 0,1
+    </select>
+    <select id="getUserConsume" parameterType="string" resultType="cn.kt.mall.common.user.vo.UserConsumeVO">
+        select * from tb_user_consume where userId =  #{userId}
+    </select>
+    <select id="queryUserById" parameterType="string" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT
+             t1.`*`,
+             t2.remark_name AS remarkName
+        FROM
+            tb_user  t1
+        left join
+            tb_im_user_remark t2
+        on
+            t1.id = t2.friend_id
+
+       WHERE
+            t1.id = #{id}
+        and
+            t2.user_id = #{userId}
+    </select>
+
+    <select id="getByUsername" parameterType="string" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT * FROM tb_user WHERE username = #{username} limit 0,1
+    </select>
+
+    <select id="getByMobile" parameterType="string" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT * FROM tb_user WHERE mobile = #{mobile} limit 0,1
+    </select>
+    <select id="getByMobileAndLevel" parameterType="string" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT * FROM tb_user as u WHERE u.mobile = #{mobile} and u.`level` in(2,3,4)limit 0,1
+    </select>
+    <update id="updatePersonal" parameterType="cn.kt.mall.common.user.vo.EditVO" flushCache="true">
+        UPDATE tb_user SET
+        <if test="nick != null and nick != ''">nick = #{nick},</if>
+        <if test="avatar != null and avatar != ''">avatar = #{avatar},</if>
+        lastTime = NOW() WHERE id = #{userId}
+    </update>
+
+    <update id="updateTransactionPassword" parameterType="string" flushCache="true">
+        UPDATE tb_user SET transactionPassword = '1', lastTime = NOW() WHERE id = #{userId}
+    </update>
+
+    <update id="updateReferrer" flushCache="true">
+        UPDATE tb_user SET referrer=#{referrer}, lastTime = NOW() WHERE id=#{id}
+    </update>
+
+    <select id="getUserCount" resultType="long">
+        SELECT COUNT(1) as cnt FROM tb_user
+        <if test=" null != username and '' != username">
+            WHERE username LIKE CONCAT('%','${username}','%')
+        </if>
+    </select>
+
+    <select id="getUserList" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT * FROM tb_user
+        <if test=" null != username and '' != username">
+            WHERE username LIKE CONCAT('%','${username}','%')
+        </if>
+        limit #{offset}, #{pageSize}
+    </select>
+
+    <select id="getSlaveAllCount" parameterType="string" resultType="int">
+        SELECT
+        IFNULL(count(1), 0) AS allCount
+        FROM
+        tb_user
+        WHERE referrer = #{currentId}
+        <if test="mobile != null and mobile.length > 0">
+            AND mobile = #{mobile}
+        </if>
+    </select>
+
+    <select id="getSlavePage" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT
+        *
+        FROM
+        tb_user
+        WHERE referrer = #{currentId}
+        <if test="mobile != null and mobile.length > 0">
+            AND mobile = #{mobile}
+        </if>
+        ORDER BY createTime
+        LIMIT #{offset}, #{pageSize}
+    </select>
+
+    <select id="getSlaveList" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT
+        *
+        FROM
+        tb_user
+        WHERE referrer = #{currentId}
+        ORDER BY createTime
+    </select>
+
+    <update id="editUserLevel" parameterType="string" flushCache="true">
+        UPDATE tb_user SET `level` = #{level}, lastTime = NOW() WHERE id = #{userId}
+    </update>
+
+    <update id="editMobile" parameterType="string" flushCache="true">
+        UPDATE tb_user SET nationalCode = #{nationalCode}, mobile = #{mobile}, lastTime = NOW() WHERE id = #{userId}
+    </update>
+
+    <!--查询多名成员的昵称-->
+    <select id="getNicks" resultType="string">
+        select nick from tb_user where id IN
+        <foreach collection="userIds" item="userId" open="(" close=")" separator="," index="index">
+            #{userId}
+        </foreach>
+    </select>
+
+    <!-- 管理后台会员&店铺账号管理 -->
+    <select id="manageUserAndShopCount" parameterType="string" resultType="int">
+        SELECT COUNT(1) FROM tb_user u
+        LEFT JOIN tb_user ur ON ur.id = u.referrer
+        LEFT JOIN tb_user us ON
+        CASE
+        WHEN ( SELECT shopNo FROM tb_shop_shop WHERE userId = u.id ) IS NULL THEN
+        us.id = u.pid ELSE us.id = u.id
+        END
+        LEFT JOIN tb_user_certification uc ON uc.userId = u.id
+        LEFT JOIN tb_user_asset ua ON ua.userId = u.id AND ua.currency = 'point'
+        LEFT JOIN tb_shop_shop s ON
+        CASE
+        WHEN ( SELECT shopNo FROM tb_shop_shop WHERE userId = u.id ) IS NULL THEN
+        s.userId = u.pid ELSE s.userId = u.id
+        END
+        LEFT JOIN tb_user_consume tuc ON
+        CASE
+        WHEN ( SELECT userLevel FROM tb_user_consume WHERE userId = u.id ) IS NOT NULL THEN tuc.userId = u.id
+        END
+        where 1=1
+        <if test="userMobile != null and userMobile != ''">
+            and u.mobile LIKE CONCAT('%',#{userMobile},'%')
+        </if>
+        <if test="referrerMobile != null and referrerMobile != ''">
+            and ur.mobile LIKE CONCAT('%',#{referrerMobile},'%')
+        </if>
+        <if test="level != null and level != ''">
+            and tuc.userLevel = #{level}
+        </if>
+        <if test="shopType != null and shopType != ''">
+            and s.shopLevel = #{shopType}
+        </if>
+        <if test="shopMobile != null and shopMobile != ''">
+            and us.mobile LIKE CONCAT('%',#{shopMobile},'%')
+        </if>
+        <if test="status != null and status != ''">
+            and u.STATUS = #{status}
+        </if>
+        <if test="certificationStatus != null and certificationStatus != ''">
+            <choose>
+                <when test="certificationStatus == '3'.toString()">
+                    and (uc.STATUS = '3' or (u.id not in (SELECT userId from tb_user_certification)))
+                </when>
+                <otherwise>
+                    and uc.STATUS = #{certificationStatus}
+                </otherwise>
+            </choose>
+        </if>
+    </select>
+    <select id="manageUserAndShop" parameterType="string" resultType="cn.kt.mall.common.user.vo.UserManageRespVO">
+        SELECT
+        u.id AS id,
+        u.createTime AS createTime,
+        u.trueName AS trueName,
+        u.mobile AS mobile,
+        ur.trueName AS referrerTrueName,
+        ur.mobile AS referrerMobile,
+        IFNULL(CONCAT(tuc.userLevel,"级"),"0级") AS level,
+        IFNULL(uc.STATUS,"3") AS certificationStatus,
+        ua.availableBalance,
+        s.shopRank AS shopRank,
+        s.shopLevel AS shopLevel,
+        us.trueName AS shopUser,
+        us.mobile AS shopMobile,
+        u.STATUS AS STATUS
+        FROM
+        tb_user u
+        LEFT JOIN tb_user ur ON ur.id = u.referrer
+        LEFT JOIN tb_user us ON
+        CASE
+        WHEN ( SELECT shopNo FROM tb_shop_shop WHERE userId = u.id ) IS NULL THEN
+        us.id = u.pid ELSE us.id = u.id
+        END
+        LEFT JOIN tb_user_certification uc ON uc.userId = u.id
+        LEFT JOIN tb_user_asset ua ON ua.userId = u.id AND ua.currency = 'point'
+        LEFT JOIN tb_shop_shop s ON
+        CASE
+        WHEN ( SELECT shopNo FROM tb_shop_shop WHERE userId = u.id ) IS NULL THEN
+        s.userId = u.pid ELSE s.userId = u.id
+        END
+        LEFT JOIN tb_user_consume tuc ON
+        CASE
+        WHEN ( SELECT userLevel FROM tb_user_consume WHERE userId = u.id ) IS NOT NULL THEN tuc.userId = u.id
+        END
+        where 1=1
+        <if test="userMobile != null and userMobile != ''">
+            and u.mobile LIKE CONCAT('%',#{userMobile},'%')
+        </if>
+        <if test="referrerMobile != null and referrerMobile != ''">
+            and ur.mobile LIKE CONCAT('%',#{referrerMobile},'%')
+        </if>
+        <if test="level != null and level != ''">
+            and tuc.userLevel = #{level}
+        </if>
+        <if test="shopType != null and shopType != ''">
+            and s.shopLevel = #{shopType}
+        </if>
+        <if test="shopMobile != null and shopMobile != ''">
+            and us.mobile LIKE CONCAT('%',#{shopMobile},'%')
+        </if>
+        <if test="status != null and status != ''">
+            and u.STATUS = #{status}
+        </if>
+        <if test="certificationStatus != null and certificationStatus != ''">
+            <choose>
+                <when test="certificationStatus == '3'.toString()">
+                    and (uc.STATUS = '3' or (u.id not in (SELECT userId from tb_user_certification)))
+                </when>
+                <otherwise>
+                    and uc.STATUS = #{certificationStatus}
+                </otherwise>
+            </choose>
+        </if>
+        ORDER BY u.createTime DESC
+        Limit #{offset},#{pageSize}
+    </select>
+
+
+    <select id="queryUserListCount" parameterType="string" resultType="int">
+        SELECT count(1) from tb_user
+        where 1 = 1
+        <if test="userMobile != null and userMobile != ''">
+            and mobile LIKE CONCAT('%',#{userMobile},'%')
+        </if>
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+        <if test="certificationStatus != null and certificationStatus != ''">
+            <choose>
+                <when test="certificationStatus == '3'.toString()">
+                    and (certificationStatus = '3' or certificationStatus is null)
+                </when>
+                <otherwise>
+                    and certificationStatus = #{certificationStatus}
+                </otherwise>
+            </choose>
+        </if>
+    </select>
+
+    <select id="queryUserList" parameterType="string" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT * from tb_user
+        where 1 = 1
+        <if test="userMobile != null and userMobile != ''">
+            and mobile LIKE CONCAT('%',#{userMobile},'%')
+        </if>
+        <if test="status != null and status != ''">
+            and status = #{status}
+        </if>
+        <if test="certificationStatus != null and certificationStatus != ''">
+            <choose>
+                <when test="certificationStatus == '3'.toString()">
+                    and (certificationStatus = '3' or certificationStatus is null)
+                </when>
+                <otherwise>
+                    and certificationStatus = #{certificationStatus}
+                </otherwise>
+            </choose>
+        </if>
+        ORDER BY createTime DESC
+        Limit #{offset},#{pageSize}
+    </select>
+
+    <select id="getByIdList" parameterType="cn.kt.mall.common.user.entity.UserEntity"
+            resultType="cn.kt.mall.common.user.entity.UserEntity">
+        select
+        u.id,
+        u.mobile,
+        u.trueName
+        from tb_user u
+        where u.id in
+        <foreach collection="userIds" item="userId" open="(" close=")" separator="," index="index">
+            #{userId}
+        </foreach>
+    </select>
+
+
+    <select id="referrerList" resultType="cn.kt.mall.common.user.vo.ReferrerRespVO">
+		select 
+			u.id,
+			u.mobile,
+		    u.nick,
+		    c.shopNum,
+		    u.status,
+            z.amountLem
+		from tb_user u
+		left join (select count(1) as shopNum,s.userId from tb_shop_shop s group by s.userId) c on c.userId = u.id
+		left join (select t.toUserId,sum(t.amountLem) as amountLem from tb_user_statement t where t.tradeType = 5 group by t.toUserId) z on z.toUserId = u.id
+        where u.referrer = #{userId}	
+    </select>
+
+    <!-- 修改用户状态 -->
+    <update id="editUserStatus" flushCache="true">
+        UPDATE tb_user SET status=#{status} WHERE id in
+        <foreach collection="userIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!-- 查询会员等级 -->
+    <select id="queryUserLevel" resultType="string">
+        SELECT userLevel from tb_user_consume GROUP BY `userLevel` ORDER BY userLevel ASC
+    </select>
+    <select id="queryUserLevelByUserID" parameterType="java.lang.String" resultType="string">
+        SELECT userLevel from tb_user_consume where userId = #{userId}
+    </select>
+
+    <update id="updateUserLevel" parameterType="java.lang.String" flushCache="true">
+    	update tb_user set level = #{level} where id = #{id}
+    </update>
+
+    <update id="updateUserTrueName" parameterType="java.lang.String" flushCache="true">
+    	update tb_user set trueName = #{trueName} where id = #{id}
+    </update>
+    <update id="updateUserCertificationStatus" parameterType="java.lang.String" flushCache="true">
+        update tb_user set certificationStatus = #{status} where id = #{id}
+    </update>
+
+    <select id="countAllUser" resultType="int">
+    	select count(1) from tb_user
+    </select>
+
+    <select id="registerCount" resultType="cn.kt.mall.common.user.vo.UserCountVO">
+    	select count(1) as count,date_format(t.createTime,'%Y-%m-%d') as day
+    	from tb_user t
+    	where t.createTime <![CDATA[ >= ]]> #{startTime} and t.createTime <![CDATA[ <= ]]> #{endTime}
+    	group by day
+    </select>
+
+    <select id="countReferee" resultType="java.lang.Integer">
+        select count(*)
+        from tb_user t
+        where t.referrer like concat('%',#{userId},'%')
+    </select>
+    <select id="getUserByPid" parameterType="java.lang.String" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT
+        *
+        FROM
+        tb_user
+        WHERE pid = #{pid}
+    </select>
+    <select id="getUserByReferee" parameterType="java.lang.String"
+            resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT
+        *
+        FROM
+        tb_user
+        WHERE referrer = #{referee}
+    </select>
+    <select id="getRefereeUserByUserId" parameterType="java.lang.String"
+            resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT
+        ta.mobile, ta.trueName
+        FROM
+        tb_user ta
+        LEFT JOIN tb_user_bankcard tb on ta.id = tb.userId
+        WHERE ta.referrer = #{userId}
+    </select>
+
+    <select id="getUserShopIdByPid" resultType="string">
+        select s.id from tb_user r LEFT join tb_shop_shop s on r.id=s.userId
+        where pid=#{pid}
+    </select>
+    <insert id="insertUserConsume" parameterType="cn.kt.mall.common.user.vo.UserConsumeVO" flushCache="true">
+        INSERT INTO tb_user_consume(id, userId,consume,userLevel)
+        VALUES(#{id}, #{userId}, #{consume},#{userLevel})
+    </insert>
+    <update id="updateUserConsume" parameterType="cn.kt.mall.common.user.vo.UserConsumeVO" flushCache="true">
+        update tb_user_consume set consume = #{consume} ,userLevel = userLevel +  #{userLevel} where id = #{id} and userLevel = #{userLevelBefore}
+    </update>
+
+    <select id="queryAvailableBalance" parameterType="string" resultType="decimal">
+        SELECT IFNULL(availableBalance,0)
+        from tb_user_asset
+        where currency = 'point' and userId = #{userId}
+    </select>
+    <select id="getByUserId" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        select * from tb_user where id = #{id}
+    </select>
+
+    <!-- 修改用户实名认证状态 -->
+    <update id="updateCertificationStatus" flushCache="true">
+        update tb_user set certificationStatus = #{certificationStatus}
+        WHERE id in
+        <foreach collection="userIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <select id="getUserBaseInfo" parameterType="string" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT * FROM tb_user ta WHERE ta.id =  #{id} LIMIT 0,1
+    </select>
+    <!--定时更新用户团队人数任务中使用：分批次查询用户Id-->
+    <select id="getUserids" resultType="cn.kt.mall.common.user.entity.UserEntity" parameterType="int">
+        SELECT id,teamCount FROM tb_user ORDER BY id LIMIT #{begin},#{end}
+    </select>
+    <!-- 修改用户实名认证状态 -->
+    <update id="updateUserTeamCountByIds" flushCache="true" parameterType="list">
+        update tb_user
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="teamCount =case" suffix="end,">
+                <foreach collection="userList" item="i" index="index">
+                    when id=#{i.id} then #{i.teamCount}
+                </foreach>
+            </trim>
+        </trim>
+        where
+        <foreach collection="userList" separator="or" item="i" index="index">
+            id=#{i.id}
+        </foreach>
+    </update>
+
+    <select id="getUserByLevel" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT
+        *
+        FROM
+        tb_user
+        WHERE level !=1
+    </select>
+    <!-- 根据用户Id与pid查询用户信息-->
+    <select id="getUserByIdAndPid" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        SELECT
+        *
+        FROM
+        tb_user
+        WHERE 1=1
+        <if test="buyUserId != null and buyUserId != ''">
+            and id = #{buyUserId}
+        </if>
+        <if test="userId != null and userId != ''">
+            and pid = #{userId}
+        </if>
+        LIMIT 0,1
+    </select>
+    <!-- 根据用户Id与pid查询用户信息-->
+    <select id="getCountByPid" resultType="int">
+        SELECT COUNT(*) FROM  tb_user WHERE pid = #{userId}
+    </select>
+
+    <!--根据用户id作为pid查询用户id列表-->
+    <select id="getUserByPidStr" resultType="int" parameterType="java.lang.String">
+        SELECT
+             IFNULL(SUM(teamCount),0)
+        FROM
+              tb_user
+        WHERE pid = #{pid} AND level = #{level}
+    </select>
+    <!--根据level查询用户列表-->
+    <select id="getUserByLevelNum" resultType="cn.kt.mall.common.user.entity.UserEntity" parameterType="int">
+        SELECT
+          id
+        FROM
+          tb_user
+        WHERE level = #{level}
+    </select>
+    <!--统计中心主任下直属会员-->
+    <select id="getlevelOneCountByPid" resultType="int" parameterType="java.lang.String">
+        SELECT
+          COUNT(*)
+        FROM
+        tb_user
+        WHERE pid = #{pid} AND level = #{level}
+    </select>
+    <!--查询用户名称与手机号-->
+    <select id="getTrueNameById" resultType="cn.kt.mall.common.user.entity.UserEntity" parameterType="java.lang.String">
+        SELECT trueName,mobile FROM tb_user WHERE  id = #{userId}
+    </select>
+
+    <!--返回shopId -->
+
+    <select id="getShopIdByUser" resultType="java.lang.String">
+     select t.id from tb_user r LEFT JOIN tb_shop_shop t on r.id =t.userId where r.`level`!=1 and t.`status`=1 and r.`status`=0
+    </select>
+
+
+    <select id="getUserIdAndTrueName" resultType="cn.kt.mall.common.user.entity.UserEntity">
+    select id,trueName,mobile  from tb_user  t
+    where  t.id in
+    (
+    select DISTINCT  userId from tb_user_extract_coupon_log
+    )
+
+    </select>
+
+    <select id="getUserIdAndTrueNameArrive" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        select id,trueName,mobile  from tb_user  t
+        where  t.id in
+        (
+        select DISTINCT  arriveAccount from tb_user_extract_coupon_log
+        )
+
+    </select>
+    <!--获取资金（充值扣除）被操作人相关-->
+    <select id="getRechargeUserByUserId" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        select id,trueName,mobile  from tb_user  t
+        where  t.id in
+        (
+        select DISTINCT rechargeUser from tb_user_recharge_log
+        )
+
+    </select>
+
+    <!--获取资金（充值扣除）操作人相关-->
+    <select id="getUserByUserId" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        select id,trueName,mobile  from tb_user  t
+        where  t.id in
+        (
+        select DISTINCT userId from tb_user_recharge_log
+        )
+
+    </select>
+
+    <!--获取优惠券转出记录-->
+    <select id="getTransferOutByUserId" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        select id,trueName,mobile  from tb_user  t
+        where  t.id in
+        (
+        select DISTINCT rollOutUserId from tb_coupon_transfer_log
+        )
+
+    </select>
+    <!--获取优惠券转出记录-->
+    <select id="getTransferInByUserId" resultType="cn.kt.mall.common.user.entity.UserEntity">
+        select id,trueName,mobile  from tb_user  t
+        where  t.id in
+        (
+        select DISTINCT rollInUserId from tb_coupon_transfer_log
+        )
+
+    </select>
+
+</mapper>

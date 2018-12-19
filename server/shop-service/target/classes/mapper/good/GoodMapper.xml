@@ -1,0 +1,979 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.good.mapper.GoodDAO">
+
+    <!--<cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+
+    <select id="getGoodEntityByGoodId" parameterType="string" resultType="cn.kt.mall.shop.good.entity.GoodEntity">
+        SELECT
+             sg.*,ss.shopName ,ss.id AS shopShopId,ss.shopRank ,IFNULL(ss.feightRate,0) as feightRate
+        FROM
+            tb_shop_good sg
+        LEFT JOIN tb_shop_shop ss ON sg.shopId = ss.id
+        WHERE
+            sg.id = #{goodId}
+        AND delFlag = 0
+    </select>
+    <select id="getGoodEntityByGoodIdAndShopId" parameterType="string"
+            resultType="cn.kt.mall.shop.good.entity.GoodEntity">
+       SELECT
+            sg.*, ss.shopName,
+            ss.id AS shopShopId,
+            gsc.sales ,
+            ss.shopRank,
+            IFNULL(ss.feightRate, 0) AS feightRate
+        FROM
+            tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good sg on sg.id = gsc.goodId
+        LEFT JOIN tb_shop_shop ss ON ss.id = gsc.shopId
+        WHERE
+            gsc.goodId = #{goodId}
+            and
+            gsc.shopId = #{shopId}
+            and
+            gsc.goodStatus = 1
+
+            AND delFlag = 0
+    </select>
+    <select id="getGoodPayEntityByGoodId" parameterType="string" resultType="cn.kt.mall.shop.good.entity.GoodPayEntity">
+       SELECT * from tb_shop_good_pay sgp where sgp.goodId = #{goodId}
+    </select>
+    <select id="getGoodEntityByShopIdAndGoodNo" parameterType="string"
+            resultType="cn.kt.mall.shop.good.entity.GoodEntity">
+        SELECT
+            id
+        FROM
+            tb_shop_good
+        WHERE
+            goodNo = #{goodNo} and shopId=#{shopId}
+    </select>
+
+
+    <!--   <select id="listGoodByIds" resultType="cn.kt.mall.shop.good.entity.GoodEntity">
+           SELECT
+           sg.*,
+           GROUP_CONCAT(sgp.payType SEPARATOR ',') as payType,
+           GROUP_CONCAT(sgp.price SEPARATOR ',') as price
+           FROM
+           tb_shop_good sg
+           LEFT JOIN tb_shop_good_pay sgp ON sg.id = sgp.goodId WHERE delFlag=0 and sg.id in
+           <foreach collection="goodIds" item="goodId" separator="," open="(" close=")">
+               #{goodId}
+           </foreach>
+           <if test="status != null and status != ''">
+               and status = #{status}
+           </if>
+           GROUP BY sg.id
+       </select>-->
+    <!--  <select id="listGoodByIds" resultType="cn.kt.mall.shop.good.entity.GoodEntity">
+          SELECT
+          sg.*
+          FROM
+          tb_shop_good sg
+          WHERE sg.id in
+          <foreach collection="goodIds" item="goodId" separator="," open="(" close=")">
+              #{goodId}
+          </foreach>
+          <if test="status != null and status != ''">
+              and status = #{status}
+          </if>
+
+      </select>-->
+    <select id="listGoodByIds" resultType="cn.kt.mall.shop.good.entity.GoodEntity">
+        SELECT
+        sg.id,sg.goodName,sg.goodPrice,sg.goodImg, gsc.shopId AS shopShopId,gsc.goodStatus
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good sg ON sg.id = gsc.goodId
+        WHERE
+        gsc.goodId IN
+        <foreach collection="goodIds" item="goodId" separator="," open="(" close=")">
+            #{goodId}
+        </foreach>
+    </select>
+    <select id="listGoodByGoodIdsAndShopIds" resultType="cn.kt.mall.shop.good.entity.GoodEntity">
+        SELECT
+        sg.id,sg.goodName,sg.goodPrice,sg.goodImg,sg.raisePrice,sg.firstGoodType,gsc.shopId AS shopShopId,gsc.goodStatus
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good sg ON sg.id = gsc.goodId
+        WHERE
+        gsc.goodId IN
+        <foreach collection="goodIds" item="goodId" separator="," open="(" close=")">
+            #{goodId}
+        </foreach>
+        AND gsc.shopId IN
+        <foreach collection="shopIds" item="shopId" separator="," open="(" close=")">
+            #{shopId}
+        </foreach>
+    </select>
+
+    <select id="searchGoods" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        select t1.*
+        from tb_shop_good t1
+
+
+        <if test="payTypes != null and payTypes != ''">
+            left join tb_shop_good_pay tp
+            on tp.goodId = t1.id
+        </if>
+
+        where delFlag = 0
+
+        <if test="payTypes != null and payTypes != ''">
+            and tp.payType = 'point'
+            <if test="payTypes == 'point'">
+                and tp.price = t1.goodPrice
+            </if>
+
+            <if test="payTypes != 'point'">
+                and tp.price != t1.goodPrice
+            </if>
+        </if>
+
+
+        <if test="goodName !=null and goodName != ''">
+            and t1.goodName LIKE concat('%',#{goodName},'%')
+        </if>
+        <if test="shopId !=null and shopId != ''">
+            and t1.shopId = #{shopId}
+        </if>
+        <if test="goodType !=null and goodType != ''">
+            and t1.firstGoodType = #{goodType}
+        </if>
+        <if test="startTime != null">
+            and t1.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null">
+            and t1.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="searchMode == 1">
+            order by t1.createTime DESC
+        </if>
+        <if test="searchMode == 2">
+            order by t1.auditTime DESC
+        </if>
+        <if test="searchMode == 3">
+            order by t1.goodSales DESC
+        </if>
+    </select>
+    <!--    <select id="searchGoodsFront" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+            SELECT
+            a.*,
+            CASE a.shopId
+            WHEN #{shopId} THEN
+            1
+            ELSE
+            0
+            END AS pidFlag
+            FROM
+            (select
+            t1.*,t2.shopName,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as
+            firstGoodTypeValue,y2.name as
+            secondGoodTypeValue,y3.name as thirdGoodTypeValue
+            from tb_shop_good t1
+            LEFT JOIN tb_shop_shop t2 ON t1.shopId=t2.id
+            left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+            left join tb_shop_good_type y2 on y2.id = t1.secondGoodType
+            left join tb_shop_good_type y3 on y3.id = t1.thirdGoodType
+            WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0
+            <if test="goodName !=null and goodName != ''">
+                and t1.goodName LIKE concat('%',#{goodName},'%')
+            </if>
+            <if test="goodType !=null and goodType != ''">
+                and t1.thirdGoodType = #{goodType}
+            </if>
+            <if test="status !=null and status != ''">
+                and t1.status = #{status}
+            </if>
+            <if test="startTime != null">
+                and t1.createTime <![CDATA[ >= ]]> #{startTime}
+            </if>
+            <if test="endTime != null">
+                and t1.createTime <![CDATA[ <= ]]> #{endTime}
+            </if>
+            <if test="searchMode == '1'">
+                order by t1.createTime DESC
+            </if>
+            <if test="searchMode == '2'">
+                order by t1.auditTime DESC
+            </if>
+            <if test="searchMode == '3'">
+                order by t1.goodSales DESC
+            </if>)a
+            ORDER BY
+            pidFlag DESC
+        </select>-->
+    <select id="searchGoodsFront" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        SELECT
+        a.*,
+        CASE a.shopShopId
+        WHEN #{shopId} THEN
+        1
+        ELSE
+        0
+        END AS pidFlag
+        FROM
+        (select
+        t1.id,t1.goodName,t1.goodPrice,t1.goodImg,t2.shopName,t2.id as shopShopId,gsc.sales ,
+        t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as firstGoodTypeValue
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good t1 ON t1.id = gsc.goodId
+        LEFT JOIN tb_shop_shop t2 ON gsc.shopId = t2.id
+        left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+        WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0
+        AND gsc.goodStatus = 1
+        <if test="goodName !=null and goodName != ''">
+            and t1.goodName LIKE concat('%',#{goodName},'%')
+        </if>
+        <if test="goodType !=null and goodType != ''">
+            and t1.thirdGoodType = #{goodType}
+        </if>
+        <if test="status !=null and status != ''">
+            and t1.status = #{status}
+        </if>
+        <if test="startTime != null">
+            and t1.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null">
+            and t1.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="searchMode == '1'">
+            order by t1.createTime DESC
+        </if>
+        <if test="searchMode == '2'">
+            order by t1.auditTime DESC
+        </if>
+        <if test="searchMode == '3'">
+            order by t1.goodSales DESC
+        </if>)a
+        ORDER BY
+        pidFlag DESC
+    </select>
+    <select id="searchShopGood" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        SELECT
+        a.*,
+        CASE a.shopShopId
+        WHEN #{shopId} THEN
+        1
+        ELSE
+        0
+        END AS pidFlag
+        FROM
+        (select
+        t1.id,t1.goodName,t1.goodPrice,t1.goodImg,t2.shopName,t2.shopLevel,t2.id as shopShopId,gsc.sales
+        ,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as firstGoodTypeValue
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good t1 ON t1.id = gsc.goodId
+        LEFT JOIN tb_shop_shop t2 ON gsc.shopId = t2.id
+        left join tb_shop_good_type y1 on y1.id = t1.firstGoodTyped
+        WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0
+        AND gsc.goodStatus = 1
+        <if test="goodName !=null and goodName != ''">
+            and t1.goodName LIKE concat('%',#{goodName},'%')
+        </if>
+        <if test="goodType !=null and goodType != ''">
+            and t1.thirdGoodType = #{goodType}
+        </if>
+        <if test="shopId !=null and shopId != ''">
+            and t2.id = #{shopId}
+        </if>
+        <if test="status !=null and status != ''">
+            and t1.status = #{status}
+        </if>
+        <if test="startTime != null">
+            and t1.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null">
+            and t1.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="searchMode == '1'">
+            order by t1.createTime DESC
+        </if>
+        <if test="searchMode == '2'">
+            order by t1.auditTime DESC
+        </if>
+        <if test="searchMode == '3'">
+            order by t1.goodSales DESC
+        </if>)a
+        ORDER BY
+        pidFlag DESC
+    </select>
+    <!--    <select id="searchShopGood" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+            SELECT
+            a.*,
+            CASE a.shopId
+            WHEN #{shopId} THEN
+            1
+            ELSE
+            0
+            END AS pidFlag
+            FROM
+            (select
+            t1.*,t2.shopName,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as firstGoodTypeValue,y2.name as
+            t1.*,t2.shopName,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as firstGoodTypeValue,y2.name as
+            t1.*,t2.shopName,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as
+            secondGoodTypeValue,y3.name as thirdGoodTypeValue
+            from tb_shop_good t1
+            LEFT JOIN tb_shop_shop t2 ON t1.shopId=t2.id
+            left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+            left join tb_shop_good_type y2 on y2.id = t1.secondGoodType
+            left join tb_shop_good_type y3 on y3.id = t1.thirdGoodType
+            WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0
+            <if test="goodName !=null and goodName != ''">
+                and t1.goodName LIKE concat('%',#{goodName},'%')
+            </if>
+            <if test="goodType !=null and goodType != ''">
+                and t1.thirdGoodType = #{goodType}
+            </if>
+            <if test="shopId !=null and shopId != ''">
+                and t2.id = #{shopId}
+            </if>
+            <if test="status !=null and status != ''">
+                and t1.status = #{status}
+            </if>
+            <if test="startTime != null">
+                and t1.createTime <![CDATA[ >= ]]> #{startTime}
+            </if>
+            <if test="endTime != null">
+                and t1.createTime <![CDATA[ <= ]]> #{endTime}
+            </if>
+            <if test="searchMode == '1'">
+                order by t1.createTime DESC
+            </if>
+            <if test="searchMode == '2'">
+                order by t1.auditTime DESC
+            </if>
+            <if test="searchMode == '3'">
+                order by t1.goodSales DESC
+            </if>)a
+            ORDER BY
+            pidFlag DESC
+        </select>-->
+    <!--    <select id="searchGoodsFrontByShopId" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+            select
+            t1.*,t2.shopName,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as
+            firstGoodTypeValue,y2.name as
+            secondGoodTypeValue,y3.name as thirdGoodTypeValue
+            from tb_shop_good t1
+            LEFT JOIN tb_shop_shop t2 ON t1.shopId=t2.id
+            left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+            left join tb_shop_good_type y2 on y2.id = t1.secondGoodType
+            left join tb_shop_good_type y3 on y3.id = t1.thirdGoodType
+            WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0 and t1.status = '1'
+            <if test="shopId !=null and shopId != ''">
+                and t1.shopId = #{shopId}
+            </if>
+
+        </select>-->
+    <select id="searchGoodsFrontByShopId" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        select
+        t1.id,t1.goodName,t1.goodPrice,t1.goodImg,t2.shopName,t2.id as shopShopId,t2.shopLevel,gsc.sales
+        ,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as firstGoodTypeValue
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good t1 ON t1.id = gsc.goodId
+        LEFT JOIN tb_shop_shop t2 ON gsc.shopId = t2.id
+        left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+        WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0 and t1.status = '1'
+        AND gsc.goodStatus = 1
+        <if test="shopId !=null and shopId != ''">
+            and t2.Id = #{shopId}
+        </if>
+
+    </select>
+    <!--    <select id="searchGoodsFrontByShopIdPid" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+            SELECT
+            a.*,
+            CASE a.shopId
+            WHEN #{shopId} THEN
+            1
+            ELSE
+            0
+            END AS pidFlag
+            FROM
+            (select
+            t1.*,t2.shopName,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as
+            firstGoodTypeValue,y2.name as
+            secondGoodTypeValue,y3.name as thirdGoodTypeValue
+            from tb_shop_good t1
+            LEFT JOIN tb_shop_shop t2 ON t1.shopId=t2.id
+            left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+            left join tb_shop_good_type y2 on y2.id = t1.secondGoodType
+            left join tb_shop_good_type y3 on y3.id = t1.thirdGoodType
+            WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0 and t1.status = '1'
+            <if test="shopId !=null and shopId != ''">
+                and t1.shopId = #{shopId}
+            </if>)a
+            ORDER BY
+            pidFlag DESC
+        </select>-->
+    <select id="searchGoodsFrontByShopIdPid" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        SELECT
+        a.*,
+        CASE a.shopShopId
+        WHEN #{shopId} THEN
+        1
+        ELSE
+        0
+        END AS pidFlag
+        FROM
+        (select
+        t1.id,t1.goodName,t1.goodPrice,t1.goodImg,t2.shopName,t2.id as shopShopId,t2.shopLevel,gsc.sales
+        ,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as firstGoodTypeValue
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good t1 ON t1.id = gsc.goodId
+        LEFT JOIN tb_shop_shop t2 ON gsc.shopId = t2.id
+        left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+        WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0 and t1.status = '1'
+        AND gsc.goodStatus = 1
+        <if test="shopId !=null and shopId != ''">
+            and t2.Id = #{shopId}
+        </if>)a
+        ORDER BY
+        pidFlag DESC
+    </select>
+    <!--    <select id="searchGoodsByType" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+            SELECT
+            a.*,
+            CASE a.shopId
+            WHEN #{shopId} THEN
+            1
+            ELSE
+            0
+            END AS pidFlag
+            FROM
+            (select
+            t1.*,t2.shopName,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as
+            firstGoodTypeValue,y2.name as
+            secondGoodTypeValue,y3.name as thirdGoodTypeValue
+            from tb_shop_good t1
+            LEFT JOIN tb_shop_shop t2 ON t1.shopId=t2.id
+            left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+            left join tb_shop_good_type y2 on y2.id = t1.secondGoodType
+            left join tb_shop_good_type y3 on y3.id = t1.thirdGoodType
+            WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0
+            <if test="goodType !=null and goodType != ''">
+                and t1.firstGoodType = #{goodType}
+            </if>
+            <if test="status !=null and status != ''">
+                and t1.status = #{status}
+            </if>) a
+            ORDER BY
+            pidFlag DESC
+        </select>-->
+    <select id="searchGoodsByType" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        SELECT
+        a.*,
+        CASE a.shopShopId
+        WHEN #{shopId} THEN
+        1
+        ELSE
+        0
+        END AS pidFlag
+        FROM
+        (select
+        t1.id,t1.goodName,t1.goodPrice,t1.goodImg,t2.id as shopShopId,t2.shopName,gsc.sales
+        ,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as firstGoodTypeValue
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good t1 ON t1.id = gsc.goodId
+        LEFT JOIN tb_shop_shop t2 ON gsc.shopId = t2.id
+        left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+        WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0
+        and gsc.goodStatus = 1
+        <if test="goodType !=null and goodType != ''">
+            and t1.firstGoodType = #{goodType}
+        </if>
+        <if test="status !=null and status != ''">
+            and t1.status = #{status}
+        </if>) a
+        ORDER BY
+        pidFlag DESC
+    </select>
+
+    <select id="initSearchGoodsByType" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        SELECT
+        a.*,
+        CASE a.shopShopId
+        WHEN #{shopId} THEN
+        1
+        ELSE
+        0
+        END AS pidFlag
+        FROM
+        (select
+        t1.id,t1.goodName,t1.goodPrice,t1.goodImg,t1.raisePrice,t2.id as shopShopId,t2.shopName,gsc.sales
+        ,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,t1.firstGoodType as firstGoodType,t1.createTime as createTime
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good t1 ON t1.id = gsc.goodId
+        LEFT JOIN tb_shop_shop t2 ON gsc.shopId = t2.id
+        WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0
+        and gsc.goodStatus = 1
+        and t1.status = 1
+        <if test="shopId !=null and shopId != ''">
+            and gsc.shopId = #{shopId}
+        </if>
+        ) a
+        order by
+        pidFlag,a.createTime DESC
+        limit 0,3
+    </select>
+
+    <!--    <select id="getAdResVOList" resultType="cn.kt.mall.shop.good.vo.AdResVO">
+            select * from tb_advertise ad where ad.`status` = 0
+        </select>-->
+    <select id="getGoodByShopIdCount" resultType="int">
+        SELECT count(1) as cnt FROM tb_shop_good WHERE status='1' AND shopId=#{shopId} and delFlag=0
+    </select>
+
+    <select id="getGoodByShopId" resultType="cn.kt.mall.shop.good.entity.GoodEntity">
+        SELECT
+        sg.*,gsc.shopId as shopShopId,gsc.sales as sales
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good sg ON sg.id = gsc.goodId
+        WHERE
+        STATUS = '1'
+        AND gsc.shopId = #{shopId}
+        and gsc.goodStatus = 1
+        <if test="goodType !=null and goodType != ''">
+            and firstGoodType=#{goodType}
+        </if>
+        and delFlag = 0
+        <if test='sort == "1" '>
+            order by goodPrice ASC
+        </if>
+        <if test='sort == "2" '>
+            order by goodPrice DESC
+        </if>
+        <if test='sort == "3" '>
+            order by sales DESC
+        </if>
+        limit #{offset},#{pageSize}
+    </select>
+
+    <insert id="addGoodSelective" parameterType="cn.kt.mall.shop.good.entity.GoodEntity" flushCache="true">
+        INSERT INTO tb_shop_good
+        <trim prefix="(" suffix=")" suffixOverrides=",">
+            id,
+            <if test="shopId != null and shopId != ''">shopId,</if>
+            <if test="userId != null and userId != ''">userId,</if>
+            <if test="goodName != null and goodName != ''">goodName,</if>
+            <if test="goodPrice != null">goodPrice,</if>
+            <if test="goodImg != null and goodImg != ''">goodImg,</if>
+            <if test="firstGoodType != null and firstGoodType != ''">firstGoodType,</if>
+            <if test="secondGoodType != null and secondGoodType != ''">secondGoodType,</if>
+            <if test="thirdGoodType != null and thirdGoodType != ''">thirdGoodType,</if>
+            <if test="goodStock != null">goodStock,</if>
+            <if test="freightFree != null">freightFree,</if>
+            <if test="status != null and status != ''">status,</if>
+            <if test="goodNo != null and goodNo != ''">goodNo,</if>
+            <if test="unit != null and unit != ''">unit,</if>
+            <if test="unfreezeRatio != null">unfreezeRatio,</if>
+            <if test="describes != null and describes != ''">describes,</if>
+            <if test="raisePrice != null">raisePrice,</if>
+        </trim>
+        <trim prefix="values (" suffix=")" suffixOverrides=",">
+            #{id},
+            <if test="shopId != null and shopId != ''">#{shopId},</if>
+            <if test="userId != null and userId != ''">#{userId},</if>
+            <if test="goodName != null and goodName != ''">#{goodName},</if>
+            <if test="goodPrice != null">#{goodPrice},</if>
+            <if test="goodImg != null and goodImg != ''">#{goodImg},</if>
+            <if test="firstGoodType != null and firstGoodType != ''">#{firstGoodType},</if>
+            <if test="secondGoodType != null and secondGoodType != ''">#{secondGoodType},</if>
+            <if test="thirdGoodType != null and thirdGoodType != ''">#{thirdGoodType},</if>
+            <if test="goodStock != null">#{goodStock},</if>
+            <if test="freightFree != null">#{freightFree},</if>
+            <if test="status != null and status != ''">#{status},</if>
+            <if test="goodNo != null and goodNo != ''">#{goodNo},</if>
+            <if test="unit != null and unit != ''">#{unit},</if>
+            <if test="unfreezeRatio != null">#{unfreezeRatio},</if>
+            <if test="describes != null and describes != ''">#{describes},</if>
+            <if test="raisePrice != null">#{raisePrice},</if>
+        </trim>
+    </insert>
+
+    <update id="updateGoodSelective" parameterType="cn.kt.mall.shop.good.entity.GoodEntity" flushCache="true">
+        update tb_shop_good
+        <set>
+            <if test="goodName != null and goodName != ''">goodName = #{goodName},</if>
+            <if test="goodPrice != null">goodPrice = #{goodPrice},</if>
+            <if test="goodImg != null and goodImg != ''">goodImg = #{goodImg},</if>
+            <if test="firstGoodType != null and firstGoodType != ''">firstGoodType = #{firstGoodType},</if>
+            <if test="secondGoodType != null and secondGoodType != ''">secondGoodType = #{secondGoodType},</if>
+            <if test="thirdGoodType != null and thirdGoodType != ''">thirdGoodType = #{thirdGoodType},</if>
+            <if test="goodStock != null">goodStock = #{goodStock},</if>
+            <if test="freightFree != null">freightFree = #{freightFree},</if>
+            <if test="status != null and status != ''">status = #{status},</if>
+            <if test="goodNo != null and goodNo != ''">goodNo = #{goodNo},</if>
+            <if test="unit != null and unit != ''">unit = #{unit},</if>
+            <if test="unfreezeRatio != null">unfreezeRatio = #{unfreezeRatio},</if>
+            <if test="describes != null and describes != ''">describes = #{describes},</if>
+            <if test="delFlag != null">delFlag = #{delFlag},</if>
+            <if test="raisePrice != null">raisePrice = #{raisePrice},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <update id="updateGoodStatus" flushCache="true">
+        UPDATE tb_shop_good SET status=#{status} WHERE id=#{goodId} and delFlag=0
+    </update>
+
+    <update id="modifyStatus" flushCache="true">
+        UPDATE tb_shop_good SET
+        status=#{targetStatus}
+        <if test="auditTime != null">, auditTime = #{auditTime}</if>
+        <!--     	WHERE id=#{goodId} and shopId = #{shopId} and status = #{currentStatus} and delFlag=0-->
+        WHERE id=#{goodId} and shopId = #{shopId} and delFlag=0
+    </update>
+
+    <update id="updateStock" flushCache="true">
+        UPDATE tb_shop_good SET goodStock=#{num} WHERE id=#{id} and goodStock = #{stock}
+    </update>
+
+    <update id="addStock" flushCache="true">
+        UPDATE tb_shop_good SET goodStock=goodStock + #{num} WHERE id=#{id}
+    </update>
+
+    <update id="reduceStock" flushCache="true">
+        UPDATE tb_shop_good SET goodStock=goodStock -  #{num} WHERE id=#{id} and goodStock >=  #{num}
+    </update>
+
+    <update id="updateSales" flushCache="true">
+        UPDATE tb_shop_good SET goodSales=goodSales+#{num} WHERE id=#{id} and delFlag=0
+    </update>
+    <update id="updateSalesCenter" flushCache="true">
+        UPDATE tb_good_shop_center SET sales=sales+#{num} WHERE goodId=#{goodId} and shopId=#{shopId} and goodStatus=1
+    </update>
+    <update id="delGoods" flushCache="true">
+		UPDATE tb_shop_good SET delFlag = 1 WHERE id=#{goodId}
+	</update>
+
+    <select id="countByShopIdAndStatus" resultType="int">
+        select count(1) from tb_shop_good
+        where status = #{status} and delFlag=0
+        <if test="shopId != null and shopId != ''">and shopId = #{shopId}</if>
+    </select>
+    <!--添加商品支付类型-->
+    <insert id="addGoodPay" parameterType="cn.kt.mall.shop.good.vo.GoodPayVO">
+        insert into tb_shop_good_pay(id, goodId, payType, price,createTime,goodPayId) values
+            (#{id},#{goodId},#{payType},#{price},#{createTime},#{goodPayId})
+    </insert>
+    <!--删除商品支付类型-->
+    <delete id="delGoodPay" parameterType="string">
+        DELETE FROM tb_shop_good_pay
+        WHERE
+        goodId =  #{goodId}
+    </delete>
+    <!--查询商品支付类型-->
+    <select id="getGoodPayByGoodId" parameterType="string" resultType="cn.kt.mall.shop.good.vo.GoodPayReqVO">
+        <!--SELECT * FROM  tb_shop_good_pay LEFT  ON  WHERE goodId = #{goodId}-->
+        SELECT t.*,p.payName as payName FROM tb_shop_good_pay t LEFT join tb_good_pay_config p
+        on t.goodPayId=p.id
+        WHERE t.goodId = #{goodId}
+    </select>
+    <!--查询商品支付类型列表-->
+    <select id="getGoodPayByGoodIdList" parameterType="string" resultType="cn.kt.mall.shop.good.vo.GoodPayReqVO">
+        SELECT
+            sgp.goodPayId,
+            gpc.payName,
+            gpc.balanceRatio,
+            gpc.payType,
+            gpc.otherRatio
+        FROM
+            tb_shop_good_pay sgp
+        LEFT JOIN tb_good_pay_config gpc ON sgp.goodPayId = gpc.id
+        where sgp.goodId = #{goodId}
+    </select>
+    <!--根据支付方式Id获取商品支付方式信息-->
+    <select id="getGoodPayByGoodPayId" parameterType="string" resultType="cn.kt.mall.shop.good.vo.GoodPayReqVO">
+       SELECT
+        gpc.id AS goodPayId,
+        gpc.payName,
+        gpc.payType,
+        gpc.balanceRatio,
+        gpc.otherRatio
+    FROM
+        tb_good_pay_config gpc
+    WHERE
+	    gpc.id = #{goodPayId}
+    </select>
+    <select id="getGoodByGoodId" parameterType="java.lang.String"
+            resultType="cn.kt.mall.shop.good.entity.GoodEntity">
+        select * from tb_shop_good where id=#{goodId}
+    </select>
+    <select id="getGoodByGoodIdAndShopId" parameterType="java.lang.String"
+            resultType="cn.kt.mall.shop.good.entity.GoodEntity">
+       SELECT
+        sg.*
+    FROM
+        tb_good_shop_center gsc
+    LEFT JOIN tb_shop_good sg ON sg.id = gsc.goodId
+    WHERE
+        gsc.goodId = #{goodId}
+      and
+        gsc.shopId = #{shopId}
+        AND
+        gsc.goodStatus = 1
+    </select>
+    <!-- 商铺后台使用-->
+    <select id="searchGoodByShopId" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        select t1.*,r.goodStatus as goodStatus,e.name as firstGoodTypeValue
+        from
+        tb_good_shop_center r
+        <if test="payTypes != null and payTypes != ''">
+            left join tb_shop_good_pay tp
+            on tp.goodId = t1.id
+        </if>
+        LEFT JOIN tb_shop_good t1 ON
+        t1.id=r.goodId and r.shopId=#{shopId}
+        LEFT JOIN tb_shop_good_type e on
+        t1.firstGoodType=e.id
+        where t1.delFlag = 0 AND r.goodStatus in(1,3)
+
+        <if test="payTypes != null and payTypes != ''">
+            and tp.payType = 'point'
+            <if test="payTypes == 'point'">
+                and tp.price = t1.goodPrice
+            </if>
+
+            <if test="payTypes != 'point'">
+                and tp.price != t1.goodPrice
+            </if>
+        </if>
+
+
+        <if test="goodName !=null and goodName != ''">
+            and t1.goodName LIKE concat('%',#{goodName},'%')
+        </if>
+
+        <if test="goodType !=null and goodType != ''">
+            and t1.firstGoodType = #{goodType}
+        </if>
+        <if test="status !=null and status != ''">
+            and r.goodStatus = #{status}
+        </if>
+        <if test="startTime != null">
+            and t1.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null">
+            and t1.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="searchMode == 1">
+            order by t1.createTime DESC
+        </if>
+        <if test="searchMode == 2">
+            order by t1.auditTime DESC
+        </if>
+        <if test="searchMode == 3">
+            order by t1.goodSales DESC
+        </if>
+    </select>
+    <!--根据shopId为kt 的所有商品 -->
+    <select id="getGoodsByKtList" parameterType="java.lang.String" resultType="cn.kt.mall.shop.good.entity.GoodEntity">
+        SELECT  * FROM  tb_shop_good t  where t.shopId=#{shopId}
+    </select>
+    <!-- 调整商品分类(批量) -->
+    <update id="adjustGoodType">
+        UPDATE tb_shop_good SET firstGoodType=#{id} WHERE id in
+        <foreach collection="goodIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+    <!-- 商品上架&下架(批量) -->
+    <update id="editGoodState">
+        UPDATE tb_shop_good SET status=#{status} WHERE id in
+        <foreach collection="goodIds" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <!-- 根据商品ID，查询该商品是否设置过支付方式 -->
+    <select id="queryPayTypeById" parameterType="java.lang.String" resultType="int">
+        SELECT count(*) FROM tb_shop_good_pay where goodId=#{goodId}
+    </select>
+    <!-- 商品支付方式修改 -->
+    <update id="updateGoodPayType" parameterType="java.lang.String">
+        UPDATE tb_shop_good_pay SET goodPayId=#{payTypeId} WHERE goodId=#{goodId}
+    </update>
+    <!-- 以下为Admin商品6.28修改版本 -->
+    <select id="searchGoodss" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        select t1.*
+        from tb_shop_good t1
+
+
+        <!--  <if test="payTypes != null and payTypes != ''">
+              left join tb_shop_good_pay tp
+              on tp.goodId = t1.id
+          </if>-->
+
+        where delFlag = 0
+
+        <!--        <if test="payTypes != null and payTypes != ''">
+                    and tp.payType = 'point'
+                    <if test="payTypes == 'point'">
+                        and tp.price = t1.goodPrice
+                    </if>
+
+                    <if test="payTypes != 'point'">
+                        and tp.price != t1.goodPrice
+                    </if>
+                </if>-->
+
+
+        <if test="goodName !=null and goodName != ''">
+            and t1.goodName LIKE concat('%',#{goodName},'%')
+        </if>
+        <if test="shopId !=null and shopId != ''">
+            and t1.shopId = #{shopId}
+        </if>
+        <if test="status !=null and status != ''">
+            and t1.status = #{status}
+        </if>
+        <if test="goodType !=null and goodType != ''">
+            and t1.firstGoodType = #{goodType}
+        </if>
+        <if test="searchMode == 1">
+            order by t1.createTime DESC
+        </if>
+        <if test="searchMode == 2">
+            order by t1.auditTime DESC
+        </if>
+        <if test="searchMode == 3">
+            order by t1.goodSales DESC
+        </if>
+    </select>
+    <!-- 以上为Admin商品6.28修改版本 -->
+
+
+    <select id="getGoodByShopIdAndGoodStatusCount" resultType="int">
+    SELECT
+	count(1) AS cnt
+    FROM
+     tb_good_shop_center t
+    LEFT JOIN
+        tb_shop_good g
+     on t.goodId=g.id
+    WHERE
+        t.goodStatus = '1'
+    AND t.shopId = #{shopId}
+    and g.delFlag = 0
+    </select>
+
+    <select id="getShopGoodSales" resultType="int">
+        select ifnull(gsc.sales,0) from tb_good_shop_center gsc
+        where shopId = #{shopId} and goodId = #{goodId} for UPDATE
+    </select>
+
+
+    <!-- 2018-07-25 11:22 zkp-->
+    <select id="initSearchGoodsByTypeAnd47" resultType="cn.kt.mall.shop.good.vo.GoodRespVO"
+            parameterType="java.lang.String">
+        select
+        t1.id,t1.goodName,t1.goodPrice,t1.goodImg,t2.id as shopShopId,t2.shopName,gsc.sales
+        ,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as firstGoodTypeValue
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good t1 ON t1.id = gsc.goodId
+        LEFT JOIN tb_shop_shop t2 ON gsc.shopId = t2.id
+        left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+        WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0
+        and gsc.goodStatus = 1
+        <if test="shopId!=null and shopId!=''">
+            and gsc.shopId!=#{shopId}
+        </if>
+        GROUP BY t1.id
+        limit 3,47
+    </select>
+
+    <select id="initSearchGoodsStartFifty" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        select
+        t1.id,t1.goodName,t1.goodPrice,t1.goodImg,t2.id as shopShopId,t2.shopName,gsc.sales
+        ,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as firstGoodTypeValue
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good t1 ON t1.id = gsc.goodId
+        LEFT JOIN tb_shop_shop t2 ON gsc.shopId = t2.id
+        left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+        WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0
+        and gsc.goodStatus = 1
+        <if test="shopId!=null and shopId!=''">
+            and gsc.shopId!=#{shopId}
+        </if>
+        <if test="goodType !=null and goodType != ''">
+            and t1.firstGoodType = #{goodType}
+        </if>
+        GROUP BY t1.id
+    </select>
+
+    <!--默认不登陆 -->
+    <select id="defaultSearchGoodsByType" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        SELECT
+        a.*,
+        CASE a.shopShopId
+        WHEN #{shopId} THEN
+        1
+        ELSE
+        0
+        END AS pidFlag
+        FROM
+        (select
+        t1.id,t1.goodName,t1.goodPrice,t1.goodImg,t2.id as shopShopId,t2.shopName,gsc.sales
+        ,t2.shopLevel,t2.shopRank,IFNULL(t2.feightRate,0) as feightRate,y1.name as firstGoodTypeValue
+        FROM
+        tb_good_shop_center gsc
+        LEFT JOIN tb_shop_good t1 ON t1.id = gsc.goodId
+        LEFT JOIN tb_shop_shop t2 ON gsc.shopId = t2.id
+        left join tb_shop_good_type y1 on y1.id = t1.firstGoodType
+        WHERE t2.shopType='2' and t2.status = '1' and t1.delFlag=0
+        and gsc.goodStatus = 1
+        <if test="goodType !=null and goodType != ''">
+            and t1.firstGoodType = #{goodType}
+        </if>
+        <if test="status !=null and status != ''">
+            and t1.status = #{status}
+        </if>) a
+
+        GROUP BY
+        a.id
+        limit 0,50
+    </select>
+
+
+    <!-- 20180726-->
+    <select id="getGoodListByIds" resultType="cn.kt.mall.shop.good.vo.GoodRespVO">
+        SELECT
+        d.id,d.goodName,d.goodPrice,d.goodImg,t.sales,d.firstGoodType,d.raisePrice
+        FROM
+        tb_shop_good d
+        LEFT JOIN tb_good_shop_center t ON d.id = t.goodId
+        WHERE
+        d.delFlag = 0 and t.goodStatus = 1
+        AND d.STATUS = 1
+        <if test="goodIds!=null and goodIds.size() >0">
+            and d.id not in
+            <foreach collection="goodIds" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        GROUP BY d.id
+    </select>
+    <!--删除商品支付类型-->
+    <delete id="delGoodPayByGoodId" parameterType="java.lang.String">
+        DELETE FROM tb_shop_good_pay
+        WHERE
+        goodId =  #{goodId}
+        <if test="payTypeId !=null and payTypeId != '' and payTypeId == 1">
+            AND goodPayId =  #{payTypeId}
+        </if>
+        <if test="payTypeId !=null and payTypeId != '' and payTypeId != 1">
+            AND goodPayId != 1
+        </if>
+    </delete>
+</mapper>

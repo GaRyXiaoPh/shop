@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <annotationProcessing>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="common" />
+        <module name="common-service" />
+        <module name="im-service" />
+        <module name="kt-front" />
+        <module name="kt-management" />
+        <module name="kt-offline" />
+        <module name="kt-open" />
+        <module name="kt-shop" />
+        <module name="kt-task" />
+        <module name="mq-util" />
+        <module name="offline-service" />
+        <module name="shop-service" />
+      </profile>
+    </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="common" target="1.8" />
+      <module name="common-service" target="1.8" />
+      <module name="im-service" target="1.8" />
+      <module name="kt" target="1.8" />
+      <module name="kt-front" target="1.8" />
+      <module name="kt-management" target="1.8" />
+      <module name="kt-offline" target="1.8" />
+      <module name="kt-open" target="1.8" />
+      <module name="kt-shop" target="1.8" />
+      <module name="kt-task" target="1.8" />
+      <module name="mq-util" target="1.8" />
+      <module name="offline-service" target="1.8" />
+      <module name="shop-service" target="1.8" />
+    </bytecodeTargetLevel>
+  </component>
+</project>

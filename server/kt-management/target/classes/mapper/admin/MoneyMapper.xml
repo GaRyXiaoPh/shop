@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.management.admin.dao.MoneyDAO">
+
+   <!-- <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+
+    <select id="getMoneyList" parameterType="string" resultType="cn.kt.mall.management.admin.vo.MoneyVO">
+        SELECT
+        m.id AS id,
+        m.createTime AS createTime,
+        m.updateTime AS updateTime,
+        m.money AS money,
+        m.userId AS userId,
+        m.remark AS remark,
+        u.nick AS nick,
+        u.username AS userName,
+        u.mobile AS mobile,
+        b.bankCard bankCard,
+        b.bankName bankName,
+        b.openBank openBank,
+        c.shopNum,
+        wallet.coinAddress
+        FROM
+        tb_money m
+        LEFT JOIN tb_user u ON u.id = m.userId
+        LEFT JOIN tb_user_wallet_lem wallet ON wallet.userId = m.userId
+        LEFT JOIN tb_user_bankcard b ON u.id = b.userId
+        LEFT JOIN ( SELECT count( 1 ) AS shopNum, s.userId FROM tb_shop_shop s GROUP BY s.userId ) c ON c.userId = u.id
+        WHERE 1=1
+        <if test="statusList != null">
+            AND m.status IN
+            <foreach collection="statusList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="hasShop != null and hasShop != '' and hasShop == '1'.toString() ">
+            <![CDATA[ AND c.shopNum > 0]]>
+        </if>
+        <if test="hasShop != null and hasShop != '' and hasShop == '0'.toString() ">
+            <![CDATA[ AND c.shopNum < 1]]>
+        </if>
+        <if test="beginTime != null and beginTime != ''">
+            <![CDATA[ AND m.createTime >= #{beginTime}]]>
+        </if>
+        <if test="endTime != null and endTime != ''">
+            <![CDATA[ AND m.createTime <= #{endTime}]]>
+        </if>
+        <if test="timeType != null and timeType != ''">
+            <![CDATA[ AND DATE_SUB(CURDATE(), INTERVAL #{timeType} DAY) <= date(m.createTime) ]]>
+        </if>
+        <if test="name != null and name != ''">
+            AND u.username LIKE  CONCAT('%',#{name},'%')
+        </if>
+        ORDER BY m.createTime DESC
+    </select>
+
+    <update id="updateMoney">
+        UPDATE tb_money SET updateTime = NOW(), status = #{status}
+        WHERE
+        id IN
+        <foreach collection="idsList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+</mapper>

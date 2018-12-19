@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.coupon.mapper.ReleaseUserAssetBaseDAO">
+
+
+    <select id="getReleaseUserAssetBaseLsitByassetType"  parameterType="cn.kt.mall.shop.coupon.vo.UserAssetBaseSearchVO"
+            resultType="cn.kt.mall.shop.coupon.entity.UserAssetBaseEntity" >
+        SELECT userId FROM
+        tb_user_asset_base
+        WHERE assetType=#{assetType}  and sendFinish = 0 and reservedBalance >0 and  needReleseDays>0
+        <if  test="lastReleaseTime !=null and lastReleaseTime !=''">
+            and lastReleaseTime <![CDATA[ < ]]> #{lastReleaseTime}
+        </if>
+         limit #{start},#{end}
+    </select>
+
+    <select id="getReleaseUserAssetBaseCountByAssetType" parameterType="cn.kt.mall.shop.coupon.vo.UserAssetBaseSearchVO" resultType="java.lang.Integer">
+        select  count(*) from  tb_user_asset_base  WHERE assetType=#{assetType} and sendFinish = 0 and reservedBalance >0 and  needReleseDays>0
+        <if  test="lastReleaseTime !=null and lastReleaseTime !=''">
+            and lastReleaseTime <![CDATA[ < ]]> #{lastReleaseTime}
+        </if>
+
+    </select>
+
+</mapper>

@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.common.wallet.mapper.UserAssetDAO">
+
+    <!--<cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+
+    <insert id="addAsset" parameterType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+        INSERT INTO tb_user_asset(id, userId, currency, withdrawable,
+        spendable, internalAsset, availableBalance, reservedBalance, createTime, lastTime)
+        VALUES( #{id}, #{userId}, #{currency}, #{withdrawable},
+        #{spendable}, #{internalAsset}, #{availableBalance}, #{reservedBalance}, #{createTime}, #{lastTime} )
+    </insert>
+
+    <update id="updateAssetByUserId" flushCache="true">
+        UPDATE tb_user_asset
+
+        <if test="availableBalance!=null">
+        </if>
+        SET availableBalance= #{deltaAvailableBalance}, deltaReservedBalance = deltaReservedBalance
+        WHERE userId=#{userId} and currency = #{currency}
+    </update>
+
+
+    <select id="getAssetByUserId" parameterType="string" resultType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+        SELECT * FROM tb_user_asset WHERE userId=#{userId}
+    </select>
+
+    <select id="getAssetToRelease" parameterType="string" resultType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+        SELECT id,userId,reservedBalance FROM tb_user_asset WHERE currency=#{currency} and reservedBalance > 0
+    </select>
+
+    <select id="getTotalReservedBalance" parameterType="string" resultType="java.math.BigDecimal">
+        SELECT sum(reservedBalance) FROM tb_user_asset WHERE currency=#{currency} and reservedBalance > 0
+    </select>
+
+    <select id="getAssetByUserIdAndCurrency" parameterType="string" resultType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+        SELECT * FROM tb_user_asset WHERE userId=#{userId} and currency = #{currency}
+    </select>
+    <select id="getAssetBaseByUserIdAndCurrency" parameterType="string" resultType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+        SELECT uab.reservedBalance as reservedBalanceBase,uab.createTime as  createTime , uab.afterAmount FROM tb_user_asset_base uab WHERE userId=#{userId} and assetType = #{currency}
+    </select>
+
+    <select id="getAssetByUserIdAndTypeForUpdate"
+            resultType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+        SELECT * FROM tb_user_asset WHERE userId=#{userId} and currency=#{currency} for UPDATE
+    </select>
+
+
+    <update id="updateAssetByUserIdAndMoneny" parameterType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+        UPDATE tb_user_asset SET
+
+        <if test="availableBalance!=null">
+            availableBalance=#{availableBalance}
+        </if>
+        <if test="availableBalance!=null and reservedBalance!=null">
+            ,
+        </if>
+        <if test="reservedBalance!=null">
+            reservedBalance=#{reservedBalance}
+        </if>
+
+        WHERE userId=#{userId} and currency=#{currency}
+    </update>
+
+    <select id="getAssetAllByCurrency" parameterType="string" resultType="cn.kt.mall.common.wallet.entity.UserAssetEntity">
+        SELECT userId,currency,reservedBalance,availableBalance FROM tb_user_asset WHERE currency = #{currency}
+    </select>
+
+
+</mapper>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.coupon.mapper.UserAssetBaseDAO">
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <select id="getUserAssetBaseLsitByassetType"  parameterType="cn.kt.mall.shop.coupon.vo.UserAssetBaseSearchVO"
+            resultType="cn.kt.mall.shop.coupon.entity.UserAssetBaseEntity" >
+        SELECT userId FROM
+        tb_user_asset_base
+        WHERE assetType=#{assetType} and lastReleaseTime<![CDATA[ < ]]> #{lastReleaseTime} and sendFinish = 0 and reservedBalance >0 and  needReleseDays>0 and lastReleaseTime <![CDATA[ < ]]> #{lastReleaseTime}
+         limit #{start},#{end}
+    </select>
+
+
+    <update id="updateUserAssetBaseByUserId" parameterType ="cn.kt.mall.shop.coupon.entity.UserAssetBaseEntity" >
+        update tb_user_asset_base
+        <set>
+        <if test="currentReleseNum !=null and currentReleseNum !=''">
+            currentReleseNum = #{currentReleseNum},
+        </if>
+        <if test="sendFinish !=null and sendFinish !=''">
+            sendFinish = #{sendFinish},
+        </if>
+        <if test="afterAmount !=null and afterAmount !=''">
+            afterAmount = #{afterAmount}
+        </if>
+        </set>
+        WHERE userId = #{userId}
+
+    </update>
+
+
+    <!--批量修改基础释放数据-->
+    <update id="updatePatchUserAssetBase" >
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+          update tb_user_asset_base
+            <set>
+                    currentReleseNum = ${item.currentReleseNum},
+                    sendFinish = #{item.sendFinish},
+                    afterAmount = #{item.afterAmount}
+
+            </set>
+            where userId = #{item.userId} and assetType = #{item.assetType}
+        </foreach>
+    </update>
+
+    <!--批量插入-->
+    <insert id="addPatchStatementEntity" >
+        INSERT INTO tb_user_statement(id, userId, currency,
+        availableBefore, availableAfter,availableChange,
+        reservedBefore, reservedAfter,reservedChange,
+        tradeType,referenceId,status,mark,createTime
+        )
+        VALUES
+        <foreach collection="list" separator="," item="item">
+            (#{item.id},#{item.userId},#{item.currency},
+            #{item.availableBefore},#{item.availableAfter},#{item.availableChange},
+            #{item.reservedBefore},#{item.reservedAfter},#{item.reservedChange},
+            #{item.tradeType},#{item.referenceId},#{item.status},#{item.mark},#{item.createTime}
+            )
+        </foreach>
+    </insert>
+    <update id="updatePatchAssetByUserIdAndMoneny" >
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            UPDATE tb_user_asset
+            <set>
+              availableBalance=availableBalance+#{item.releaseNum} ,
+                reservedBalance=reservedBalance-#{item.releaseNum}
+            </set>
+            WHERE userId=#{item.userId} and currency=#{item.currencyType} and reservedBalance>= #{item.releaseNum}
+        </foreach>
+    </update>
+
+    <select id="getUserAssetBaseCountByAssetType" parameterType="cn.kt.mall.shop.coupon.vo.UserAssetBaseSearchVO" resultType="java.lang.Integer">
+        select  count(*) from  tb_user_asset_base  WHERE assetType=#{assetType} and sendFinish = 0 and reservedBalance >0 and  needReleseDays>0 and lastReleaseTime <![CDATA[ < ]]> #{lastReleaseTime}
+    </select>
+
+</mapper>

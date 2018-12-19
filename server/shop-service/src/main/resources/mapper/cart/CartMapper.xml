@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.cart.mapper.CartDAO">
+
+    <!--<cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+
+    <insert id="addCart" parameterType="cn.kt.mall.shop.cart.entity.CartEntity" flushCache="true">
+        INSERT INTO tb_shop_cart(id, shopId, goodId, buyNum, buyPrice, buyUserId,pidFlag)
+        VALUES (#{id},#{shopId},#{goodId},#{buyNum},#{buyPrice},#{buyUserId},#{pidFlag})
+    </insert>
+
+    <delete id="delCart" parameterType="string" flushCache="true">
+        DELETE FROM tb_shop_cart WHERE id=#{id}
+    </delete>
+
+    <update id="updateCart" parameterType="cn.kt.mall.shop.cart.entity.CartEntity" flushCache="true">
+        UPDATE tb_shop_cart SET buyNum = #{buyNum} WHERE id=#{id}
+    </update>
+
+    <!-- 批量删除 -->
+    <delete id="delCartByBatch" flushCache="true">
+        DELETE FROM tb_shop_cart WHERE buyUserId = #{userId} and id in(
+            <foreach collection="ids" item="id" separator=",">
+                #{id}
+            </foreach>
+        )
+    </delete>
+
+    <select id="getCartByBuyUserId" parameterType="string" resultType="cn.kt.mall.shop.cart.entity.CartEntity">
+        select * from tb_shop_cart WHERE buyUserId=#{buyUserId}
+    </select>
+
+    <select id="getCartByShopId" parameterType="string" resultType="cn.kt.mall.shop.cart.entity.CartEntity">
+        SELECT * FROM tb_shop_cart WHERE shopId=#{shopId}
+    </select>
+
+    <select id="getCartByGoodId" parameterType="string" resultType="cn.kt.mall.shop.cart.entity.CartEntity">
+        SELECT * FROM tb_shop_cart WHERE goodId=#{goodId}
+    </select>
+    
+    <select id="getByShopIdAndUserId" resultType="cn.kt.mall.shop.cart.entity.CartEntity">
+        SELECT * FROM tb_shop_cart WHERE shopId=#{shopId} and goodId=#{goodId} and buyUserId=#{userId}
+    </select>
+
+    <select id="getCartGoodsCountByUserId" resultType="java.lang.Integer">
+        select IFNULL(sum(buyNum),0) as sumGoodsNum from tb_shop_cart sc where sc.buyUserId = #{userId}
+    </select>
+</mapper>

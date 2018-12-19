@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.offline.dao.OrderDAO">
+
+    <!--添加订单信息-->
+    <insert id="addOrder" parameterType="cn.kt.mall.offline.entity.OrderResEntity">
+        insert into
+        tb_circle_trade  (
+        order_id,
+        userId,
+        shop_id,
+        total_price,
+        rate,
+        lyme,
+        actual_lyme,
+        mark,
+        order_time
+        )
+        values(
+        #{orderId},
+        #{userId},
+        #{shopId},
+        #{totalPrice},
+        #{rate},
+        #{lyme},
+        #{actualLyme},
+        #{mark},
+        NOW()
+        )
+    </insert>
+
+    <!--添加订单详细信息-->
+    <insert id="addOrderDetail" parameterType="cn.kt.mall.offline.entity.OrderDetailResEntity">
+        insert into
+        tb_circle_order_detail (
+            order_id,
+            shop_id,
+            userId,
+            good_no,
+            good_name,
+            good_main_pic,
+            price,
+            num,
+            create_time
+        )
+        VALUES
+        <foreach collection="list" item="item" index="index" separator="," >
+            (#{item.orderId},
+             #{item.shopId},
+             #{item.userId},
+             #{item.goodNo},
+             #{item.goodName},
+             #{item.goodMainPic},
+             #{item.price},
+             #{item.num},
+             NOW())
+        </foreach>
+    </insert>
+
+    <!--查询订单信息-->
+    <select id="getOrderInfo" resultType="cn.kt.mall.offline.entity.OrderInfoEntity">
+          select
+             t.order_id AS orderId,
+             t.userId,
+             u.username,
+             s.userId AS merUserId,
+             s.id AS shopId,
+             t.total_price AS totalPrice,
+             t.rate,
+             t.lyme,
+             t.actual_lyme AS actualLyme,
+             t.`status`,
+             t.order_time AS createTime,
+             t.pay_time AS payTime
+          from tb_circle_trade t
+           left join tb_shop_shop s on s.id = t.shop_id
+           left join tb_user u on t.userId = u.id
+         where t.order_id = #{orderId}
+          limit 0,1
+    </select>
+    <!--查询订单管理列表-->
+    <select id="queryOrderManageList" parameterType="cn.kt.mall.offline.vo.OrderRequestVO"
+              resultType="cn.kt.mall.offline.entity.OrderEntity">
+        SELECT
+             t.order_id AS orderId,
+             u.username,
+             d.orderGood,
+             t.total_price AS totalPrice,
+             t.lyme,
+             t.pay_time AS payTime,
+             c.score
+        FROM tb_circle_trade t
+        INNER JOIN tb_user u ON t.userId = u.id
+        LEFT JOIN (
+        SELECT order_id, GROUP_CONCAT(good_name,":",num) AS orderGood
+        FROM tb_circle_order_detail
+        GROUP BY order_id) d ON t.order_id = d.order_id
+        LEFT JOIN tb_circle_comment c ON c.order_id = t.order_id
+        WHERE t.shop_id = #{shopId} AND t.`status` = 1
+          <if test="orderId != null and orderId != ''">
+              and t.order_id = #{orderId}
+          </if>
+          <if test="username != null and username != ''">
+              and u.username like concat('%',#{username},'%')
+          </if>
+          <if test="startTime != null and startTime != ''">
+              and t.pay_time <![CDATA[ >= ]]> #{startTime}
+          </if>
+          <if test="endTime != null and endTime != ''">
+              and t.pay_time <![CDATA[ <= ]]> #{endTime}
+          </if>
+         order by t.pay_time desc
+        limit #{pageNo},#{pageSize}
+    </select>
+
+    <select id="queryOrderManageCount" parameterType="cn.kt.mall.offline.vo.OrderRequestVO"
+            resultType="int">
+        SELECT
+          count(1)
+        FROM tb_circle_trade t
+        INNER JOIN tb_user u ON t.userId = u.id
+        LEFT JOIN (
+        SELECT order_id, GROUP_CONCAT(good_name,":",num) AS orderGood
+        FROM tb_circle_order_detail
+        GROUP BY order_id) d ON t.order_id = d.order_id
+        LEFT JOIN tb_circle_comment c ON c.order_id = t.order_id
+        WHERE t.shop_id = #{shopId} AND t.`status` = 1
+        <if test="orderId != null and orderId != ''">
+            and t.order_id = #{orderId}
+        </if>
+        <if test="username != null and username != ''">
+            and u.username like concat('%',#{username},'%')
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and t.pay_time <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and t.pay_time <![CDATA[ <= ]]> #{endTime}
+        </if>
+    </select>
+    <!--更新订单状态-->
+    <update id="updateOrderStatus">
+        update tb_circle_trade
+        set
+           `status` = 1,
+           actual_lyme = #{actualLyme},
+           pay_time = now()
+        where
+           order_id = #{orderId}
+
+    </update>
+
+    <!--查询订单商品信息-->
+    <select id="getOrderGoodInfo" resultType="cn.kt.mall.offline.entity.OrderDetailResEntity">
+        select
+            good_no AS goodNo,
+            good_name AS goodName,
+            good_main_pic AS goodMainPic,
+            price,
+            num,
+            price*num AS subtotal
+        from
+           tb_circle_order_detail
+        where
+           order_id = #{orderId}
+    </select>
+
+    <!--获取商圈订单列表-->
+    <select id="getCircleOrderInfo" resultType="cn.kt.mall.offline.entity.CircleOrderEntity">
+        select
+             t.order_id AS orderId,
+             t.shop_id AS shopId,
+             t.total_price AS totalPrice,
+             a.company ,
+             a.companyImg,
+             case when c.id is null then false else true end AS flag
+        from
+            tb_circle_trade t
+        inner join tb_shop_authdata a on t.shop_id = a.shopId
+        left join tb_circle_comment c on t.order_id = c.order_id
+        where
+            t.userId = #{userId}
+        and t.`status` = 1
+        order by t.pay_time desc
+        LIMIT #{offset},#{pageSize}
+    </select>
+    <!--获取商圈订单列表长度-->
+    <select id="getCircleOrderCount" resultType="int">
+        select
+          count(1)
+        from
+          tb_circle_trade
+        where
+           userId = #{userId}
+        and
+           `status` = 1
+    </select>
+
+    <!--查询某天交易的订单总数和莱姆数-->
+    <select id="getTransData" resultType="cn.kt.mall.offline.entity.DataEntity">
+        SELECT
+        COUNT(order_id) AS num,
+        SUM(lyme) AS lyme,
+        DATE_FORMAT(pay_time,'%Y-%m-%d') AS dayTime
+        FROM tb_circle_trade
+        WHERE shop_id = #{shopId}
+        AND `status` = 1
+        <if test="startTime != null and startTime != ''">
+            AND pay_time <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            AND pay_time <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="dayTime != null and dayTime !=''">
+            AND DATE_FORMAT(pay_time,'%Y-%m-%d') = #{dayTime}
+        </if>
+        GROUP BY DATE_FORMAT(pay_time,'%m-%d-%Y')
+    </select>
+
+    <select id="monthIncome" resultType="cn.kt.mall.offline.entity.DataEntity">
+        SELECT SUM(t.lyme) AS lyme, DATE_FORMAT(pay_time,'%Y-%m') AS dayTime
+        FROM tb_circle_trade t
+        WHERE t.`status` = 1 AND t.shop_id = #{shopId}
+        GROUP BY DATE_FORMAT(pay_time,'%Y-%m')
+        Limit #{offset},#{pageSize}
+    </select>
+
+    <select id="monthIncomeCount" resultType="int">
+        SELECT COUNT(1)
+        FROM (
+        SELECT SUM(t.lyme) AS lyme, DATE_FORMAT(pay_time,'%Y-%m') AS MONTH
+        FROM tb_circle_trade t
+        WHERE t.`status` = 1 AND t.shop_id = #{shopId}
+        GROUP BY DATE_FORMAT(pay_time,'%Y-%m')) t
+    </select>
+
+    <select id="getCapitalDetail" resultType="cn.kt.mall.offline.entity.DataEntity">
+        SELECT
+          createTime AS dayTime,
+        CASE WHEN (fromUserId = #{userId}) THEN '转出'
+        WHEN (toUserId = #{userId}) THEN '转入' END AS statusName,
+        amountLem AS lyme
+        FROM tb_user_statement
+        WHERE tradeType NOT IN (5,6) AND fromUserId = #{userId}
+        Limit #{offset},#{pageSize}
+    </select>
+
+    <select id="getCapitalDetailCount" resultType="int">
+        SELECT
+          count(1)
+        FROM tb_user_statement
+        WHERE tradeType NOT IN (5,6) AND fromUserId = #{userId}
+    </select>
+
+    <!--查询线下商户累计收益-->
+    <select id="getShopIncome" resultType="double">
+      select sum(lyme)  from  tb_circle_trade t where t.shop_id = #{shopId} and t.`status` =1
+    </select>
+    
+    <select id="manageCount" resultType="java.math.BigDecimal">
+    	select sum(actual_lyme) from tb_circle_trade t where t.`status` = 1
+		<if test="startTime != null">and order_time <![CDATA[ >= ]]> #{startTime}</if>
+		<if test="endTime != null">and order_time <![CDATA[ <= ]]> #{endTime}</if>
+    </select>
+</mapper>

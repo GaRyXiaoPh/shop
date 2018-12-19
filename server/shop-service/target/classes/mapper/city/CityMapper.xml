@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.city.mapper.CityDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <!--查询省份列表-->
+    <select id="getProvinceList" resultType="cn.kt.mall.shop.city.entity.CityEntity">
+        select t.sid,t.Province_Name AS name from bbt_system_province t order by t.Province_Sort
+    </select>
+
+    <!--根据省id查询市区列表-->
+    <select id="getCityList" resultType="cn.kt.mall.shop.city.entity.CityEntity">
+      select sid,City_Name AS name from bbt_system_city
+      <if test="id != null">
+          where Pro_ID = #{id}
+      </if>
+       order by City_Sort
+    </select>
+
+    <!--根据市区id查到县区-->
+    <select id="getCountyList" resultType="cn.kt.mall.shop.city.entity.CityEntity">
+        select sid,district_Name AS name from bbt_system_district
+        <if test="id != null">
+            where city_ID = #{id}
+        </if>
+        order by district_Sort
+    </select>
+
+	<select id="getDataById" resultType="cn.kt.mall.shop.city.vo.CityRespVO">
+		select
+			p.sid as province,p.Province_Name as provinceValue,
+		    c.sid as city,c.City_Name as cityValue,
+		    d.sid as county,d.district_Name as countyValue
+		from bbt_system_province p
+		left join bbt_system_city c on  c.Pro_ID = p.sid
+		left join bbt_system_district d on d.city_ID = c.sid
+		where p.sid = #{proId} and c.sid = #{cityId} and d.sid = #{districtId} limit 0,1
+	</select>
+
+    <!--获取所有市区列表-->
+    <select id="queryCityList" resultType="cn.kt.mall.shop.city.vo.CityBaseVO">
+        select sid,City_Name AS name from bbt_system_city
+        <if test="name != null and name != ''">
+            where City_Name LIKE  concat('%',#{name},'%')
+        </if>
+    </select>
+
+    <!--根据城市名称查询对应的sid-->
+    <select id="selectCodeById" parameterType="string" resultType="cn.kt.mall.shop.city.vo.CityBaseVO">
+        select sid,City_Name  AS name from bbt_system_city  where City_Name = #{name}
+    </select>
+</mapper>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.logistics.mapper.ShopGoodTransportDAO">
+
+    <insert id="addShopTranSport" parameterType="cn.kt.mall.shop.logistics.vo.ShopTransportVO">
+        insert  into tb_shop_transport
+        (id,shopId,goodId,tradeNo,totalFreightFree,userId,operatorTime,transportNo,logisticsName)
+        values
+            (#{id},#{shopId},#{goodId},#{tradeNo},#{totalFreightFree},#{userId},now(),#{transportNo},#{logisticsName})
+    </insert>
+
+    <select id="getShopTransportByShopIdAndGoodId" parameterType="String"
+            resultType="cn.kt.mall.shop.logistics.vo.ShopTransportVO">
+        select * from tb_shop_transport where shopId =#{shopId} and goodId = #{goodId} and tradeNo=#{tradeNo}
+    </select>
+
+
+</mapper>

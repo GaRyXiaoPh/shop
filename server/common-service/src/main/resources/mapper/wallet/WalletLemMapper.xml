@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.common.wallet.mapper.WalletLemDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <select id="queryWalletAddress"  parameterType="string" resultType="cn.kt.mall.common.wallet.entity.WalletLemEntity">
+        select * from tb_user_wallet where userId=#{userId} order by updateTime desc  limit 0,1
+    </select>
+
+    <insert id="addWalletAddress" parameterType="cn.kt.mall.common.wallet.entity.WalletLemEntity" flushCache="true">
+        INSERT INTO tb_user_wallet(id, userId, popcAddress, remark, createTime, updateTime)
+        VALUES( #{id}, #{userId}, #{popcAddress}, #{remark}, NOW(), NOW() )
+    </insert>
+
+    <update id="updateWalletAddress" flushCache="true">
+        UPDATE tb_user_wallet SET popcAddress = #{popcAddress},remark = #{remark}, updateTime = NOW() WHERE id=#{id}
+    </update>
+
+    <delete id="delWallet" parameterType="string">
+        delete from tb_user_wallet where id=#{id}
+    </delete>
+
+    <update id="updateCoin" flushCache="true">
+        UPDATE tb_user_wallet_lem SET coin=#{coin} WHERE userId=#{userId}
+    </update>
+    <update id="updateCoinByNum" flushCache="true">
+        UPDATE tb_user_wallet_lem SET coin=coin+#{num} WHERE userId=#{userId}
+    </update>
+
+    <update id="updateCoinFrozen" flushCache="true">
+        UPDATE tb_user_wallet_lem SET coinFrozen=#{coinFrozen} WHERE userId=#{userId}
+    </update>
+    <update id="updateCoinFrozenByNum" flushCache="true">
+        UPDATE tb_user_wallet_lem SET coinFrozen=coinFrozen+#{num} WHERE userId=#{userId}
+    </update>
+
+    <update id="frozenCoin" flushCache="true">
+        UPDATE  tb_user_wallet_lem SET coin=coin-#{num}, coinFrozen=coinFrozen+#{num} WHERE userId=#{userId}
+    </update>
+    <update id="thawCoin" flushCache="true">
+        UPDATE tb_user_wallet_lem SET coin=coin+#{num}, coinFrozen=coinFrozen-#{num} WHERE userId=#{userId}
+    </update>
+
+    <select id="getWallet" parameterType="string" resultType="cn.kt.mall.common.wallet.entity.WalletLemEntity">
+        SELECT * FROM tb_user_wallet_lem WHERE userId=#{userId}
+    </select>
+
+    <select id="getWalletByAddress" parameterType="string" resultType="cn.kt.mall.common.wallet.entity.WalletLemEntity">
+        SELECT * FROM tb_user_wallet_lem WHERE coinAddress=#{coinAddress}
+    </select>
+	
+	<select id="countByAllUser" parameterType="string" resultType="java.math.BigDecimal">
+		select sum(t.coin)-sum(t.coinFrozen) from tb_user_wallet_lem t where t.userId != #{userId}
+	</select>
+	
+	<select id="countByUserType" parameterType="string" resultType="java.math.BigDecimal">
+		select sum(t.coin)-sum(t.coinFrozen) from tb_user_wallet_lem t where t.userId != #{userId} and t.userId in
+		(select s.userId from tb_shop_shop s where s.shopType = #{type} group by s.userId)
+	</select>
+	
+</mapper>

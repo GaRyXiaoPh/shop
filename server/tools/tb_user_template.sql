@@ -1,0 +1,1 @@
+("{userId}","{mobile}","1","{mobile}","$5$2FLK2vz929etrE8B$D5j.IUDG2mE2lE7Ky157TgVoXvjmxgsvqPj7eSKyIQ5","$5$2FLK2vz929etrE8B","","{referrer}","{level}",0,null, null, NOW(), NOW(),"{pid}",null, "{trueName}"),

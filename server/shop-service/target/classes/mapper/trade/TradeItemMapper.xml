@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.trade.mapper.TradeItemDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <!--根据id批量获取订单商品信息-->
+    <select id="getTradeItemListByIds" resultType="cn.kt.mall.shop.trade.entity.TradeItemEntity">
+        select * from tb_shop_trade_item where tradeId in
+        <foreach collection="tradeIds" separator="," close=")" open="(" item="id">
+            #{id}
+        </foreach>
+    </select>
+
+  <select id="getTradeItemListByTradeId" resultType="cn.kt.mall.shop.trade.entity.TradeItemEntity">
+        select sti.*,sg.firstGoodType as goodTyp ,sti.goodStatus as goodStatus  from tb_shop_trade_item  sti
+        left join tb_shop_good sg
+        on sg.id = sti.goodId
+        where sti.tradeId = #{tradeId}
+    </select>
+    <select id="getTradeItemListByTradeIdAndShopId" resultType="cn.kt.mall.shop.trade.entity.TradeItemEntity">
+        SELECT
+            sti.*,
+            sg.firstGoodType AS goodTyp,
+            sgc.goodStatus AS `status`
+        FROM
+            tb_shop_trade_item sti
+        LEFT JOIN tb_good_shop_center sgc ON sgc.goodId = sti.goodId
+        LEFT JOIN tb_shop_good sg ON sg.id = sti.goodId
+        WHERE
+            sti.tradeId =  #{tradeId}
+        AND sgc.shopId =  #{shopId}
+    </select>
+    <select id="getTradeItemList" resultType="cn.kt.mall.shop.trade.entity.TradeItemEntity">
+        SELECT
+        sti.*
+        FROM
+          tb_shop_trade_item sti
+        WHERE
+          sti.tradeId =  #{tradeId}
+    </select>
+    <update id="updateShopTradeItem" parameterType="cn.kt.mall.shop.trade.entity.TradeItemEntity">
+        update tb_shop_trade_item set lastTime = #{lastTime}, goodStatus= #{goodStatus}
+        where tradeId = #{tradeId} and shopId = #{shopId} and goodId = #{goodId}
+    </update>
+    <!--批量插入-->
+    <insert id="insertBatch" flushCache="true">
+        INSERT INTO tb_shop_trade_item (id,tradeId,shopId,goodId,goodName,goodImg,buyNum,buyPrice,freightFree,buyUserId)
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.id},#{item.tradeId},#{item.shopId},#{item.goodId},#{item.goodName},#{item.goodImg},#{item.buyNum},
+            #{item.buyPrice},#{item.freightFree},#{item.buyUserId})
+        </foreach>
+    </insert>
+    <insert id="insertTradeItem" flushCache="true" parameterType="cn.kt.mall.shop.trade.entity.TradeItemEntity">
+        INSERT INTO tb_shop_trade_item (id,tradeId,shopId,goodId,goodName,goodImg,buyNum,buyPrice,freightFree,buyUserId,payType,raisePrice)
+        values(#{id},#{tradeId},#{shopId},#{goodId},#{goodName},#{goodImg},#{buyNum},
+            #{buyPrice},#{freightFree},#{buyUserId},#{payType},#{raisePrice})
+    </insert>
+
+    <update id="updateTradeItemByShopIdAndGoodId" flushCache="true">
+          update tb_shop_trade_item set goodStatus=#{goodStatus}
+          WHERE  tradeId=#{tradeId} and goodId=#{goodId}
+    </update>
+
+    <select id="getShopTranSportByShopIdAndTradeIdAndGoodId"  parameterType="String" resultType="cn.kt.mall.shop.shop.vo.ShopTransportVO">
+        select * from tb_shop_transport where shopId =#{shopId} and tradeNo = #{tradeNo} and goodId =#{goodId}
+    </select>
+
+</mapper>

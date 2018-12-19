@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.good.mapper.GoodShopCenterDao">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <update id="modifyStatus" flushCache="true">
+        update tb_good_shop_center
+        <set>
+            <if test="goodStatus != null and goodStatus != ''">goodStatus = #{goodStatus},</if>
+            modifyTime=now()
+        </set>
+        where shopId = #{shopId} and goodId=#{goodId}
+    </update>
+
+    <update id="batchGoodStatus" flushCache="true">
+        update tb_good_shop_center t set t.goodStatus=#{goodStatus},t.modifyTime=now()
+        where goodId IN
+        <foreach collection="goodList" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </update>
+    <insert id="insertGoodShopCenter" flushCache="true">
+        insert into tb_good_shop_center
+		(id,shopId,goodId,goodStatus,createTime,sales) values
+		(#{id},#{shopId},#{goodId},#{goodStatus},now(),0)
+    </insert>
+
+    <update id="batchDeleteGoodByGoodIds" flushCache="true">
+        DELETE FROM tb_good_shop_center
+        where goodId IN
+        <foreach collection="goodIds" item="item" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </update>
+
+    <insert id="insertByBatchGoodShopCenter" parameterType="java.util.List">
+        insert into tb_good_shop_center (id,shopId,goodId,goodStatus,createTime,sales)
+        values
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.id}, #{item.shopId},#{item.goodId},#{item.goodStatus},now(),0)
+        </foreach>
+    </insert>
+</mapper>

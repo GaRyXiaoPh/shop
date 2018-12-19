@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.offline.dao.CommentDAO">
+
+    <!--添加评论-->
+    <insert id="addComment" parameterType="cn.kt.mall.offline.entity.CommentEntity">
+      insert into
+         tb_circle_comment
+            (id,order_id,shop_id,user_id,score,content,pics)
+      values
+          (#{id},#{orderId},#{shopId},#{userId},#{score},#{content},#{commentPics})
+    </insert>
+
+    <!--查询店铺所有评论-->
+    <select id="selectComment" parameterType="string" resultType="cn.kt.mall.offline.vo.CommentInfo">
+         select
+            case when t.user_id is null then '匿名' else u.mobile end AS userName,
+            u.avatar,
+            t.score,
+            t.content,
+            t.pics
+         from
+            tb_circle_comment t
+         left join tb_user u on t.user_id = u.id
+        where t.shop_id = #{shopId}
+    </select>
+
+    <!--查询订单号的评论-->
+    <select id="getOrderComment" resultType="cn.kt.mall.offline.entity.CommentEntity">
+        select score,content,pics AS commentPics,createTime from tb_circle_comment  where order_id = #{orderId}
+    </select>
+
+    <!--获取评论管理列表-->
+    <select id="getCommentManage" parameterType="cn.kt.mall.offline.vo.CommentResVO" resultType="cn.kt.mall.offline.entity.CommentEntity">
+        select
+            u.username,
+            t.order_id AS orderId,
+            t.score,
+            t.createTime,
+            t.content,
+            t.pics AS commentPics
+        from
+            tb_circle_comment t
+        inner join tb_circle_trade d on t.order_id = d.order_id
+        left join tb_user u on d.userId = u.id
+        where
+            t.shop_id = #{shopId}
+        <if test="startTime != null and startTime != ''">
+            and t.createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and t.createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        <if test="username !=null and username != ''">
+            and u.username LIKE  concat('%', #{username}, '%')
+        </if>
+        order by t.createTime desc
+        limit #{pageNo},#{pageSize}
+    </select>
+
+    <select id="getCommentCount" parameterType="cn.kt.mall.offline.vo.CommentResVO" resultType="int">
+        select
+            count(1)
+        from
+            tb_circle_comment t
+        left join tb_user u on t.user_id = u.id
+        where
+            t.shop_id = #{shopId}
+        and t.createTime <![CDATA[ >= ]]> #{startTime}
+        and t.createTime <![CDATA[ <= ]]> #{endTime}
+        <if test="username !=null and username != ''">
+            and u.username LIKE  concat('%', #{username}, '%')
+        </if>
+    </select>
+</mapper>

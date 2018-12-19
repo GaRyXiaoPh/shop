@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.good.mapper.GoodCouponCenterDao">
+
+    <!--<cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+
+    <select id="getGoodCollectEntityByShopIdAndGoodId" resultType="cn.kt.mall.shop.good.vo.GoodCouponCenterReqVO">
+SELECT
+	c.couponName,
+	t.couponNum,
+	c.ratio
+FROM
+	tb_good_coupon_center t
+LEFT JOIN tb_coupon c ON t.couponId = c.id
+WHERE
+	t.shopId = #{shopId}
+AND t.goodId = #{goodId}
+ORDER BY t.createTime DESC
+    </select>
+	<select id="getGoodCollectEntityByGoodIds" resultType="cn.kt.mall.shop.good.entity.GoodCouponCenterEntity">
+		SELECT
+		gcc.*,
+		c.ratio,
+		c.couponName,
+		c.couponType
+		FROM
+		tb_good_coupon_center gcc
+		LEFT JOIN  tb_coupon c on gcc.couponId = c.id
+		WHERE
+		gcc.goodId IN
+		<foreach collection="goodIds" item="goodId" separator="," open="(" close=")">
+			#{goodId}
+		</foreach>
+	</select>
+
+	<select id="getGoodCollectEntityByGoodId" resultType="cn.kt.mall.shop.good.entity.GoodCouponCenterEntity">
+		SELECT
+		gcc.*,
+		c.ratio,
+		c.couponName,
+		c.couponType
+		FROM
+		tb_good_coupon_center gcc
+		LEFT JOIN  tb_coupon c on gcc.couponId = c.id
+		WHERE
+		gcc.goodId = #{goodId}
+	</select>
+
+	<select id="getGoodCouponCenterEntityByGoodIdAndCouponId" resultType="cn.kt.mall.shop.good.entity.GoodCouponCenterEntity">
+		SELECT
+			gcc.*,
+			c.ratio,
+			c.couponName,
+			c.sendDays,
+			c.isSend
+			FROM
+			tb_good_coupon_center gcc
+			LEFT JOIN  tb_coupon c on gcc.couponId = c.id
+		WHERE
+			gcc.goodId = #{goodId}
+	   	and couponId = #{couponId}
+	</select>
+	<select id="getGoodCouponCenterEntityByCouponName" resultType="cn.kt.mall.shop.coupon.vo.CouponsVO">
+		select * from tb_coupon c where c.couponName = '优惠券'
+	</select>
+</mapper>

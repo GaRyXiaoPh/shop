@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.management.admin.dao.CertificationDAO">
+
+    <!-- 获取实名认证列表长度 -->
+    <select id="getCertificationListCount" resultType="int">
+        select count(1) from tb_user_certification
+        where 1=1
+        <if test="status != null and status != '100'">
+            and status = #{status}
+        </if>
+        <if test="trueName != null and trueName != ''">
+            and trueName LIKE CONCAT('%','${trueName}','%')
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        order by createTime desc
+    </select>
+
+    <!-- 获取实名认证列表 -->
+    <select id="getCertificationList" resultType="cn.kt.mall.common.user.entity.CertificationEntity">
+        select * from tb_user_certification
+        where 1=1
+        <if test="status != null and status != '100'">
+            and status = #{status}
+        </if>
+        <if test="trueName != null and trueName != ''">
+            and trueName LIKE CONCAT('%','${trueName}','%')
+        </if>
+        <if test="startTime != null and startTime != ''">
+            and createTime <![CDATA[ >= ]]> #{startTime}
+        </if>
+        <if test="endTime != null and endTime != ''">
+            and createTime <![CDATA[ <= ]]> #{endTime}
+        </if>
+        order by createTime desc
+        Limit #{offset},#{pageSize}
+    </select>
+
+    <!-- 编辑实名认证的审核状态 -->
+    <update id="editCertificationStatus" flushCache="true">
+        UPDATE tb_user_certification SET status=#{status},updateTime=now() WHERE userID in
+        <foreach collection="idsList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+        and status = '0'
+    </update>
+</mapper>

@@ -1,0 +1,314 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.trade.mapper.TradeDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <insert id="addTrade" parameterType="cn.kt.mall.shop.trade.entity.TradeEntity" flushCache="true">
+        INSERT INTO tb_shop_trade(id, interiorNo, tradeNo, shopId, buyUserId, status, totalPrice, totalFreightFree, coinWait,lemRate, coined,
+            country, province, city, county, detailAddress, recvName, recvMobile, zipcode, mark, totalCny)
+        VALUES (#{id},#{interiorNo},#{tradeNo},#{shopId},#{buyUserId},#{status},#{totalPrice},
+                #{totalFreightFree},#{coinWait},#{lemRate},#{coined},
+                #{country},#{province},#{city},#{county},#{detailAddress},#{recvName},#{recvMobile},#{zipcode},#{mark},#{totalCny})
+    </insert>
+
+    <!--批量插入-->
+    <insert id="insertBatch" flushCache="true">
+        INSERT INTO tb_shop_trade(id, interiorNo, tradeNo, shopId, buyUserId, status, totalPrice, totalFreightFree,
+        coinWait,lemRate, coined,point,
+        country, province, city, county, detailAddress, recvName, recvMobile, zipcode, mark,
+        totalCny,provinceValue,cityValue,countyValue,payType)
+        VALUES
+        <foreach collection="list" separator="," item="item">
+            (#{item.id},#{item.interiorNo},#{item.tradeNo},#{item.shopId},#{item.buyUserId},#{item.status},#{item.totalPrice},
+            #{item.totalFreightFree},#{item.coinWait},#{item.lemRate},#{item.coined},#{item.point},
+            #{item.country},#{item.province},#{item.city},#{item.county},#{item.detailAddress},#{item.recvName},#{item.recvMobile},#{item.zipcode},#{item.mark},
+            #{item.totalCny},#{item.provinceValue},#{item.cityValue},#{item.countyValue},#{item.payType})
+        </foreach>
+    </insert>
+    <!--插入-->
+    <insert id="insertTradeEntity" flushCache="true">
+        INSERT INTO tb_shop_trade(id, interiorNo, tradeNo, shopId, buyUserId, status, totalPrice, totalFreightFree,
+        coinWait,lemRate, coined,point,
+        country, province, city, county, detailAddress, recvName, recvMobile, zipcode, mark, totalCny,provinceValue,cityValue,countyValue,payType,currentTime)
+        VALUES
+            (#{id},#{interiorNo},#{tradeNo},#{shopId},#{buyUserId},#{status},#{totalPrice},
+            #{totalFreightFree},#{coinWait},#{lemRate},#{coined},#{point},
+            #{country},#{province},#{city},#{county},#{detailAddress},#{recvName},#{recvMobile},#{zipcode},#{mark},
+            #{totalCny},#{provinceValue},#{cityValue},#{countyValue},#{payType},#{currentTime})
+    </insert>
+    <insert id="insertTrade" flushCache="true">
+        INSERT INTO tb_shop_trade(id, interiorNo, tradeNo, shopId, buyUserId, status, totalPrice, totalFreightFree,
+        coinWait,lemRate, coined,
+        country, province, city, county, detailAddress, recvName, recvMobile, zipcode, mark, totalCny)
+        VALUES
+        (#{id},#{interiorNo},#{tradeNo},#{shopId},#{buyUserId},#{status},#{totalPrice},
+        #{totalFreightFree},#{coinWait},#{lemRate},#{coined},
+        #{country},#{province},#{city},#{county},#{detailAddress},#{recvName},#{recvMobile},#{zipcode},#{mark},
+        #{totalCny})
+
+    </insert>
+    <update id="delTrade" flushCache="true">
+        UPDATE tb_shop_trade set flag = #{flag} WHERE id=#{id}
+    </update>
+
+    <update id="delShopTrade" flushCache="true">
+        UPDATE tb_shop_trade set shopFlag = #{shopFlag} WHERE id=#{id}
+    </update>
+
+    <select id="myTradeCount" resultType="int">
+        SELECT count(1) as cnt FROM tb_shop_trade WHERE buyUserId=#{userId} and flag = 0
+        <if test=" null!=status and ''!=status">
+            <choose>
+                <when test="status == '4'.toString()">
+                    AND (status = '5' or status = '6')
+                </when>
+                <otherwise>
+                    AND status=#{status}
+                </otherwise>
+            </choose>
+        </if>
+    </select>
+
+    <select id="myTrade" resultType="cn.kt.mall.shop.trade.entity.TradeEntity">
+        SELECT * FROM tb_shop_trade WHERE buyUserId=#{userId} and flag = 0
+        <if test=" null!=status and ''!=status">
+            <choose>
+                <when test="status == '4'.toString()">
+                    AND (status = '5' or status = '6')
+                </when>
+                <otherwise>
+                    AND status=#{status}
+                </otherwise>
+            </choose>
+        </if>
+        ORDER BY createTime DESC limit #{offset},#{pageSize}
+    </select>
+
+    <select id="tradeByShopIdCount" resultType="cn.kt.mall.shop.trade.vo.TradeCountVO">
+        SELECT
+        count(1) as count,sum(totalCny) as totalCny,sum(coinWait) as totalLem,
+        DATE_FORMAT(createTime,'%Y-%m-%d') as day
+        FROM tb_shop_trade
+        WHERE shopId=#{shopId}
+        <if test=" null!=status and ''!=status">
+            AND status=#{status}
+        </if>
+        group by DATE_FORMAT(createTime,'%Y-%m-%d')
+        having day <![CDATA[ >= ]]> #{startTime} and day <![CDATA[ <= ]]> #{endTime}
+    </select>
+
+    <select id="tradeByShopId" resultType="cn.kt.mall.shop.trade.entity.TradeEntity">
+        SELECT * FROM tb_shop_trade WHERE shopId=#{shopId}
+        <if test=" null!=status and ''!=status">
+            AND status=#{status}
+        </if>
+        ORDER BY createTime DESC limit #{offset},#{pageSize}
+    </select>
+
+    <select id="getTradeByTradeNo" parameterType="string" resultType="cn.kt.mall.shop.trade.entity.TradeEntity">
+        SELECT * FROM tb_shop_trade WHERE tradeNo=#{tradeNo} limit 0,1
+    </select>
+
+    <select id="getTradeByInteriorNo" resultType="cn.kt.mall.shop.trade.entity.TradeEntity">
+        SELECT * FROM tb_shop_trade WHERE interiorNo=#{interiorNo}
+        <if test="userId != null and userId !=''">
+            and buyUserId = #{userId}
+        </if>
+    </select>
+
+    <select id="getTradeById" resultType="cn.kt.mall.shop.trade.entity.TradeEntity">
+        SELECT * FROM tb_shop_trade WHERE id=#{id}
+        <if test="userId != null and userId != ''">
+            and buyUserId = #{userId}
+        </if>
+    </select>
+
+    <update id="updateTradeStatusById" flushCache="true">
+        UPDATE tb_shop_trade SET status=#{status} WHERE id=#{id}
+    </update>
+
+    <update id="updateTradeCoinById" flushCache="true">
+        UPDATE tb_shop_trade SET coined=#{coin} WHERE id=#{id}
+    </update>
+
+    <update id="updateTradeCoinAndStatus" flushCache="true">
+        UPDATE tb_shop_trade SET coined=#{coin},status=#{status} WHERE id=#{id}
+    </update>
+
+    <update id="setTradeStatus" flushCache="true">
+        UPDATE tb_shop_trade SET status=#{targetStatus} WHERE id=#{id} and status = #{currentStatus}
+    </update>
+
+    <!-- 10表示已关闭，12表示已完成（包含已收货） -->
+    <select id="listTrade" resultType="cn.kt.mall.shop.trade.entity.TradeEntity"
+            parameterType="cn.kt.mall.shop.trade.vo.TradeManageReqVO">
+        select t.* from tb_shop_trade t
+        where t.id in
+        (select g.tradeId from tb_shop_trade_item g
+        <where>
+            <if test="shopId != null and shopId != ''">
+                and g.shopId = #{shopId}
+            </if>
+            <if test="searchName != null and searchName != ''">
+                and g.goodName like concat('%',#{searchName},'%')
+            </if>
+        </where>
+        )
+        <if test="shopFlag != null">
+            and t.shopFlag = #{shopFlag}
+        </if>
+        <if test="flag != null">
+            and t.flag = #{flag}
+        </if>
+        <if test="shopId != null and shopId != ''">
+            and t.shopId = #{shopId}
+        </if>
+        <if test="userId != null and userId != ''">
+            and t.buyUserId = #{userId}
+        </if>
+        <choose>
+            <when test="status == '10'">
+                and t.status in ('8','9','10')
+            </when>
+            <when test="status == '12'">
+                and t.status in ('3','12')
+            </when>
+            <when test="status != null and status != ''">
+                and t.status = #{status}
+            </when>
+            <otherwise>
+                and t.status in ('0','1','2','3','4','8','9','10','12')
+            </otherwise>
+        </choose>
+        <if test="tradeNo != null and tradeNo != ''">and t.tradeNo = #{tradeNo}</if>
+        <if test="startTime != null">and t.createTime <![CDATA[ >= ]]> #{startTime}</if>
+        <if test="endTime != null">and t.createTime <![CDATA[ <= ]]> #{endTime}</if>
+        <if test="recvName != null and recvName != ''">and t.recvName = #{recvName}</if>
+        order by t.createTime DESC
+    </select>
+
+    <update id="updateSelective" parameterType="cn.kt.mall.shop.trade.entity.TradeEntity" flushCache="true">
+        update tb_shop_trade
+        <set>
+            <if test="province != null">
+                province = #{province,jdbcType=BIGINT},
+            </if>
+            <if test="city != null">
+                city = #{city,jdbcType=BIGINT},
+            </if>
+            <if test="county != null">
+                county = #{county,jdbcType=BIGINT},
+            </if>
+            <if test="detailAddress != null and detailAddress != ''">
+                detailAddress = #{detailAddress,jdbcType=VARCHAR},
+            </if>
+            <if test="recvName != null and recvName != ''">
+                recvName = #{recvName,jdbcType=VARCHAR},
+            </if>
+            <if test="recvMobile != null and recvMobile != ''">
+                recvMobile = #{recvMobile,jdbcType=VARCHAR},
+            </if>
+            <if test="zipcode != null and zipcode != ''">
+                zipcode = #{zipcode,jdbcType=VARCHAR},
+            </if>
+            <if test="mark != null and mark != ''">
+                mark = #{mark,jdbcType=VARCHAR},
+            </if>
+        </set>
+        where id = #{id,jdbcType=VARCHAR}
+        <if test="shopId != null and shopId != ''">
+            and shopId = #{shopId,jdbcType=VARCHAR}
+        </if>
+    </update>
+
+    <select id="drawTradeList" resultType="cn.kt.mall.shop.trade.vo.TradeAbnormalRespVO"
+            parameterType="cn.kt.mall.shop.trade.vo.TradeManageReqVO">
+        select t.id as tradeId,t.tradeNo,t.totalPrice+t.totalFreightFree as amount, t.coined as amountLem,
+        t.buyUserId,u.nick,u.username as userName,l.createTime as createTime,l.logValue as reason,
+        l.logValue1,l.logValue2,l.logImg1,l.logImg2,l.logImg3,l.status as processType
+        from tb_shop_trade t
+        left join tb_shop_trade_log l on t.id = l.tradeId
+        left join tb_user u on u.id = t.buyUserId
+        where l.logCode = #{logStatus} and t.shopId = #{shopId}
+        <if test="shopFlag != null">
+            and t.shopFlag = #{shopFlag}
+        </if>
+        <if test="tradeNo != null and tradeNo != ''">
+            and t.tradeNo = #{tradeNo}
+        </if>
+        <if test="searchName != null and searchName != ''">
+            and u.username like concat('%',#{searchName},'%')
+        </if>
+        <if test="startTime != null">and l.createTime <![CDATA[ >= ]]> #{startTime}</if>
+        <if test="endTime != null">and l.createTime <![CDATA[ <= ]]> #{endTime}</if>
+        <if test="status != null and status != ''">and l.status = #{status}</if>
+        order by t.createTime DESC
+    </select>
+
+    <select id="countByShopIdAndStatus" resultType="int">
+		select count(1) from tb_shop_trade 
+		where status = #{status} and shopId = #{shopId}
+	</select>
+
+    <select id="manageCount" resultType="java.math.BigDecimal">
+        select sum(coined) from tb_shop_trade where (status = 3 or status = 12)
+        <if test="startTime != null">and createTime <![CDATA[ >= ]]> #{startTime}</if>
+        <if test="endTime != null">and createTime <![CDATA[ <= ]]> #{endTime}</if>
+    </select>
+
+
+    <!--  查询自己店铺订单和子级的订单 10表示已关闭，12表示已完成（包含已收货） -->
+    <select id="listTradeByShopId" resultType="cn.kt.mall.shop.trade.entity.TradeEntity"
+            parameterType="cn.kt.mall.shop.trade.vo.TradeManageReqVO">
+        select t.* from tb_shop_trade t
+        where t.id in
+        (select g.tradeId from tb_shop_trade_item g
+        <where>
+            <if test="shopIdList != null and shopIdList.size()>0">
+                and g.shopId in
+                <foreach item="item" index="index" collection="shopIdList" open="(" separator="," close=")">
+                    #{item}
+                </foreach>
+            </if>
+            <if test="goodList != null and goodList.size()>0">
+                AND
+                <foreach item="item" index="index" collection="goodList" open="(" separator="or" close=")">
+                    g.goodName like concat('%',#{item},'%')
+                </foreach>
+            </if>
+        </where>
+        )
+        <if test="shopFlag != null">
+            and t.shopFlag = #{shopFlag}
+        </if>
+        <if test="flag != null">
+            and t.flag = #{flag}
+        </if>
+        <if test="shopId != null and shopId != ''">
+            and t.shopId = #{shopId}
+        </if>
+        <if test="userId != null and userId != ''">
+            and t.buyUserId = #{userId}
+        </if>
+        <choose>
+            <when test="status == '10'">
+                and t.status in ('8','9','10')
+            </when>
+            <when test="status == '12'">
+                and t.status in ('3','12')
+            </when>
+            <when test="status != null and status != ''">
+                and t.status = #{status}
+            </when>
+            <otherwise>
+                and t.status in ('0','1','2','3','4','8','9','10','12')
+            </otherwise>
+        </choose>
+        <if test="tradeNo != null and tradeNo != ''">and t.interiorNo = #{tradeNo}</if>
+        <if test="startTime != null">and t.createTime <![CDATA[ >= ]]> #{startTime}</if>
+        <if test="endTime != null">and t.createTime <![CDATA[ <= ]]> #{endTime}</if>
+        <if test="recvName != null and recvName != ''">and t.recvName like concat('%',#{recvName},'%')</if>
+        order by t.createTime DESC
+    </select>
+</mapper>

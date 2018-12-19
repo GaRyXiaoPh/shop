@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.cash.mapper.CashDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <select id="getCashByID" resultType="cn.kt.mall.shop.cash.entity.CashEntity">
+        SELECT * FROM tb_user_cash_log WHERE 1=1
+        <if test="cashId != null and cashId != ''">
+            and id = #{cashId}
+        </if>
+    </select>
+
+    <update id="updateCashStatusById" flushCache="true">
+        UPDATE tb_user_cash_log SET status=#{status},updateTime=#{currentTime} WHERE id=#{id}
+    </update>
+
+    <select id="getCashList" resultType="cn.kt.mall.shop.cash.vo.CashRespVO"
+            parameterType="cn.kt.mall.shop.cash.vo.CashReqVO">
+        select
+          t.id,
+          t.createTime,
+          t.updateTime,
+          w.popcAddress,
+          t.remark,
+          u.trueName,
+          t.cashAmount,
+          t.status,
+          t.userId,
+          u.pid,
+          s.id as shopId,
+          s.whetherPay
+        from tb_user_cash_log t
+        LEFT JOIN tb_user u on u.id=t.userId
+        LEFT JOIN tb_user_wallet w on w.userId=u.id
+        LEFT JOIN tb_shop_shop s on s.userId=u.id
+        where 1=1
+        <if test="userId != null">
+            and u.pid = #{userId}
+        </if>
+        <if test="status != null">
+            and t.status = #{status}
+        </if>
+        <if test="startTime != null">and t.createTime <![CDATA[ >= ]]> #{startTime} </if>
+        <if test="endTime != null">and t.createTime <![CDATA[ <= ]]> #{endTime} </if>
+        <if test="trueName != null">
+            and u.trueName like concat('%',#{trueName},'%')
+        </if>
+        <if test="isShop != null">
+            <if test="isShop == '0'.toString()">
+                and s.shopNo is null
+            </if>
+            <if test="isShop == '1'.toString()">
+                and s.shopNo is not null
+            </if>
+        </if>
+        order by t.createTime DESC
+    </select>
+
+    <insert id="addCash" parameterType="cn.kt.mall.shop.cash.entity.CashEntity" flushCache="true">
+        INSERT INTO tb_user_cash_log(id, userId, cashAmount, status, createTime)
+        VALUES (#{id},#{userId},#{cashAmount},#{status},#{createTime})
+    </insert>
+
+    <select id="getShopWhetherPay" parameterType="string" resultType="string">
+        SELECT whetherPay FROM tb_shop_shop WHERE userId = #{pid}
+    </select>
+
+</mapper>

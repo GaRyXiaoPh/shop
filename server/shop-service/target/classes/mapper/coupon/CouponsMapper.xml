@@ -1,0 +1,316 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.coupon.mapper.CouponsDAO">
+
+    <!--<cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>-->
+
+    <select id="getCouponsList" parameterType="string" resultType="cn.kt.mall.shop.coupon.vo.CouponsVO">
+          SELECT * FROM tb_coupon WHERE 1 = 1
+            <if test="id != null and id != ''">
+                   AND id = #{id}
+            </if>
+          ORDER BY createTime DESC
+    </select>
+    <select id="getUserCouponVOList" parameterType="string" resultType="cn.kt.mall.shop.coupon.vo.CouponVO">
+        select * from tb_user_coupon uc where uc.userId = #{userId}
+    </select>
+    <select id="getCouponIdBypeciesType" parameterType="string" resultType="cn.kt.mall.shop.coupon.entity.CouponEntity">
+        select * from tb_coupon c where c.speciesType = 1
+    </select>
+    <select id="getCouponsByKey" parameterType="string" resultType="cn.kt.mall.shop.coupon.entity.CouponsEntity">
+        SELECT * FROM tb_coupon WHERE 1 = 1
+        <if test="id != null and id != ''">
+            AND id = #{id}
+        </if>
+    </select>
+    <select id="getCouponById" parameterType="string" resultType="cn.kt.mall.shop.coupon.entity.CouponEntity">
+        SELECT * FROM tb_coupon WHERE 1 = 1
+        <if test="id != null and id != ''">
+            AND id = #{id}
+        </if>
+    </select>
+    <insert id="addCoupon" parameterType="cn.kt.mall.shop.coupon.entity.CouponsEntity">
+        insert into tb_coupon(id, couponName, couponNum, unit,createTime,ratio) values
+            (#{id}, #{couponName}, #{couponNum}, #{unit}, #{createTime},  #{ratio})
+    </insert>
+
+    <!--更新用户优惠券-->
+    <update id="updateCoupon" parameterType="cn.kt.mall.shop.coupon.entity.CouponsEntity" flushCache="true">
+        UPDATE tb_coupon
+        SET
+            <if test="couponName != null and couponName != ''">
+                couponName = #{couponName},
+            </if>
+            <if test="unit != null and unit != ''">
+                unit = #{unit},
+            </if>
+            <if test="couponNum != null and couponNum != ''">
+                couponNum = #{couponNum}
+            </if>
+            <if test="ratio != null and ratio != ''">
+                ratio = #{ratio}
+            </if>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateUserCouponLog"  parameterType="cn.kt.mall.shop.coupon.entity.UserCouponLogEntity" flushCache="true">
+        UPDATE tb_user_coupon_log
+        set
+        <if test="afterNum !=null and afterNum !=''">
+            afterNum = #{afterNum}
+        </if>
+        WHERE id = #{id}
+    </update>
+
+    <!--删除优惠券-->
+    <delete id="deleteCoupons" parameterType="java.util.List">
+        DELETE FROM tb_coupon
+        WHERE
+        id IN
+        <foreach collection="idsList" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!--建立商品与优惠券联系-->
+    <insert id="addGoodCouponCenter" parameterType="cn.kt.mall.shop.good.entity.GoodCouponCenterEntity">
+        insert into tb_good_coupon_center(id, goodId, couponId, shopId,createTime,couponNum) values
+            (#{id},#{goodId},#{couponId},#{shopId},#{createTime},#{couponNum})
+    </insert>
+
+    <!--删除商品与优惠券关系-->
+    <delete id="delGoodCouponCenter" parameterType="string">
+        DELETE FROM tb_good_coupon_center
+        WHERE
+        goodId =  #{goodId}
+    </delete>
+
+    <!--查询优惠券是否被使用-->
+    <select id="getIsOrNotByGoods" parameterType="string" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM tb_good_coupon_center WHERE couponId = #{couponId}
+    </select>
+
+    <select id="getSysCouponsList" parameterType="string" resultType="cn.kt.mall.shop.coupon.entity.CouponEntity">
+        SELECT * FROM tb_coupon WHERE 1 = 1
+    </select>
+    <select id="getCouponByName" parameterType="string" resultType="cn.kt.mall.shop.coupon.entity.CouponEntity">
+        SELECT * FROM tb_coupon WHERE 1 = 1 AND  couponName =  #{couponName}
+    </select>
+    <!--插入-->
+    <insert id="insertUserCouponLog" flushCache="true">
+        INSERT INTO tb_user_coupon_log (id,userId,tradeId,goodId,beforeNum,rechargeNum,afterNum,couponName,couponId,needReleseDays,sendFinish,relationUserId,totalCny,ratio,totalRaisePrice,createTime)
+        values
+            (#{id},#{userid},#{tradeid},#{goodid},#{beforenum},#{rechargenum},#{afternum},#{couponname},#{couponid},#{needReleseDays},#{sendfinish},#{relationUserId},#{totalCny},#{ratio},#{totalRaisePrice},NOW())
+      </insert>
+    <select id="getGoodCollectEntityByTradeId" resultType="cn.kt.mall.shop.coupon.entity.UserCouponLogEntity">
+        SELECT
+        *
+        FROM
+        tb_user_coupon_log ucl
+        WHERE
+        ucl.tradeId = #{tradeId}
+    </select>
+    <select id="getGoodCollectEntityByTradeIdAndShop" resultType="java.lang.String">
+        SELECT
+        *
+        FROM
+        tb_user_coupon_log ucl
+        WHERE
+        ucl.tradeId = #{tradeId}
+    </select>
+
+
+
+    <select id="getUserCouponEntity"  parameterType="string" resultType="cn.kt.mall.shop.coupon.entity.UserCouponEntity">
+      select * from tb_user_coupon where 1=1
+        <if test="userId != null and userId != ''">
+            AND userId = #{userId}
+        </if>
+
+        <if test="couponId !=null and couponId !=''">
+            AND couponId = #{couponId}
+        </if>
+        FOR UPDATE
+    </select>
+
+
+    <insert id="addUserCouponEntity" parameterType ="cn.kt.mall.shop.coupon.entity.UserCouponEntity">
+       INSERT INTO tb_user_coupon (id, userId,cdkeyNum,couponType,couponNum,createTime,status,couponId,reservedCouponNum)
+       values
+           (#{id},#{userId},#{cdkeyNum},#{couponType},#{couponNum},now(),#{status},#{couponId},#{reservedCouponNum})
+    </insert>
+
+    <update id="updateUserCouponEntity" parameterType ="cn.kt.mall.shop.coupon.entity.UserCouponEntity" flushCache="true">
+        UPDATE tb_user_coupon
+        <set>
+            <if test="status !=null and status !=''">
+                status = #{status},
+            </if>
+            <if test="couponNum !=null and couponNum !=''">
+                couponNum = #{couponNum},
+            </if>
+            <if test="reservedCouponNum !=null and reservedCouponNum !=''">
+                reservedCouponNum = #{reservedCouponNum},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    <update id="updateUserCoupon" parameterType ="cn.kt.mall.shop.coupon.entity.UserCouponEntity"  flushCache="true">
+        UPDATE tb_user_coupon
+        <set>
+            <if test="status !=null and status !=''">
+                status = #{status},
+            </if>
+            <if test="couponNum !=null and couponNum !=''">
+                couponNum = couponNum + #{couponNum},
+            </if>
+            <if test="reservedCouponNum !=null and reservedCouponNum !=''">
+                reservedCouponNum = reservedCouponNum + #{reservedCouponNum},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    <update id="updateUserCouponBySend" parameterType ="cn.kt.mall.shop.coupon.entity.UserCouponEntity"  flushCache="true">
+        UPDATE tb_user_coupon
+        <set>
+            <if test="status !=null and status !=''">
+                status = #{status},
+            </if>
+            <if test="couponNum !=null and couponNum !=''">
+                couponNum = couponNum - #{couponNum},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    <select id="getCouponTimeConfigList" parameterType="string" resultType="cn.kt.mall.shop.coupon.vo.CouponTimeConfigVo">
+       select * from tb_coupon_time_config where 1=1
+    </select>
+    <select id="getAllTbCouponList" resultType="cn.kt.mall.shop.coupon.vo.CouponsVO">
+        select * from tb_coupon where 1=1
+    </select>
+    <select id="getUsercouponLogDetailList" resultType="cn.kt.mall.shop.coupon.entity.UserCouponLogEntity">
+        SELECT
+            *
+        FROM
+            tb_user_coupon_log ucl
+        WHERE
+        ucl.userId = #{userId}
+        and
+        ucl.couponId =#{couponId}
+
+        order by createTime DESC
+
+    </select>
+    <select id="getUsercouponLog" resultType="cn.kt.mall.shop.coupon.entity.UserCouponLogEntity">
+        SELECT
+        *
+        FROM
+        tb_user_coupon_log ucl
+        WHERE
+        ucl.userId = #{userId}
+        and
+        ucl.couponId =#{couponId}
+        AND
+        ucl.tradeId = #{tradeId}
+        AND
+        ucl.goodId = #{goodId}
+    </select>
+
+    <insert id="inserCouponTransfer" parameterType="cn.kt.mall.shop.coupon.vo.CouponTransferVO">
+        insert into tb_coupon_transfer_log(id, rollInUserId, rollOutUserId,relation,amount,fee,createTime) values
+        (#{id},#{rollInUserId},#{rollOutUserId},#{relation},#{amount},#{fee},now())
+    </insert>
+    <insert id="inserCouponExtract" parameterType="cn.kt.mall.shop.coupon.vo.ExtractVO">
+        insert into tb_user_extract_coupon_log(id, userId, couponId, applyNumBefore,applyNum,applyNumAfter,ratio,auditStatus,poundage,arriveAccount,operateType,createTime) values
+        (#{id},#{userId},#{couponId},#{amountBefore},#{amount},#{amountAfter},#{ratio},#{status},#{poundage},#{arriveAccount},#{operateType},now())
+    </insert>
+    <!--获取游戏彩票提取记录-->
+    <select id="getCouponExtractLogList" resultType="cn.kt.mall.shop.coupon.vo.ExtractVO">
+        SELECT
+        l.id AS id,
+        l.createTime AS createTime,
+        l.applyNum AS amount,
+        l.applyNumAfter AS amountAfter,
+        l.applyNumBefore AS amountBefore,
+        l.ratio AS ratio,
+        l.userId AS userId,
+        l.auditStatus AS status,
+        c.couponName AS couponName,
+        l.couponId AS couponId,
+        l.poundage AS poundage
+        FROM
+        tb_user_extract_coupon_log l
+        LEFT JOIN tb_coupon c ON l.couponId = c.id
+        WHERE
+        c.isDocking = '1'
+        AND
+        l.couponId = #{couponId}
+        AND
+        l.userId = #{userId}
+        ORDER  by l.createTime DESC
+    </select>
+    <!--获取游戏彩票使用记录-->
+    <select id="getCouponAllExtractLogList" resultType="cn.kt.mall.shop.coupon.vo.ExtractVO">
+        SELECT
+        l.id AS id,
+        l.createTime AS createTime,
+        l.applyNum AS amount,
+        l.applyNumAfter AS amountAfter,
+        l.applyNumBefore AS amountBefore,
+        l.ratio AS ratio,
+        l.userId AS userId,
+        l.auditStatus AS status,
+        c.couponName AS couponName,
+        l.couponId AS couponId,
+        l.poundage AS poundage,
+        l.operateType AS operateType
+        FROM
+        tb_user_extract_coupon_log l
+        LEFT JOIN tb_coupon c ON l.couponId = c.id
+        WHERE
+        c.isDocking = '1'
+        AND
+        l.couponId = #{couponId}
+        AND
+        l.userId = #{userId}
+        ORDER  by l.createTime DESC
+    </select>
+    <update id="updatePatchUserCouPonList" >
+
+        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
+            UPDATE tb_user_coupon
+            <set>
+            couponNum =couponNum + #{item.releaseNum},
+            reservedCouponNum = reservedCouponNum - #{item.releaseNum}
+            </set>
+            WHERE id = #{item.id}
+        </foreach>
+    </update>
+
+    <insert id="addPatchUserCouPonList" flushCache="true">
+        INSERT INTO tb_user_coupon (id, userId,cdkeyNum,couponType,couponNum,createTime,status,couponId,reservedCouponNum)
+        values
+        <foreach collection="list" separator="," item="item">
+            (#{item.id},#{item.userId},#{item.cdkeyNum},#{item.couponType},#{item.couponNum},now(),#{item.status},#{item.couponId},#{item.reservedCouponNum})
+        </foreach>
+    </insert>
+
+    <select id="getUserCouponEntityList" resultType="cn.kt.mall.shop.coupon.entity.UserCouponEntity">
+        select * from tb_user_coupon  where 1=1
+    </select>
+
+    <select id="getUserCoupobLogByTimeCount" parameterType="cn.kt.mall.shop.coupon.vo.UserCouponSearchVO" resultType="java.lang.Integer">
+      select count(*) from tb_user_coupon_log where sendFinish = "0" and couponId =#{couponId} and needReleseDays > 0
+      and createtime  <![CDATA[ < ]]> #{createTime} and lastReleaseTime <![CDATA[ < ]]> #{lastReleaseTime}
+
+    </select>
+
+    <select id="getUserCouponsLogListByTime" parameterType="cn.kt.mall.shop.coupon.vo.UserCouponSearchVO" resultType="cn.kt.mall.shop.coupon.entity.UserCouponLogEntity">
+        select id from tb_user_coupon_log where sendFinish = "0" and couponId =#{couponId} and  needReleseDays > 0 and createtime  <![CDATA[ < ]]> #{createTime} and lastReleaseTime <![CDATA[ < ]]> #{lastReleaseTime}
+        limit #{start},#{end}
+    </select>
+
+    <select id="getUserCouponEntityUserIdAndTypeList" resultType="cn.kt.mall.shop.coupon.entity.UserCouponEntity">
+        select userId,couponId,couponNum, reservedCouponNum from tb_user_coupon  where 1=1
+    </select>
+</mapper>

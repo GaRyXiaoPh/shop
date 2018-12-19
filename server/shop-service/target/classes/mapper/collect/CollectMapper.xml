@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.collect.mapper.CollectDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <insert id="addShopCollect" flushCache="true">
+        INSERT INTO tb_shop_shop_collect(id, userId, shopId)
+        VALUES (#{id}, #{userId}, #{shopId})
+    </insert>
+
+    <delete id="delShopCollect" flushCache="true">
+        DELETE FROM tb_shop_shop_collect WHERE userId=#{userId} AND shopId in
+        <foreach collection="shopIds" item="shopId" open="(" close=")" separator="," index="index">
+            #{shopId}
+        </foreach>
+    </delete>
+
+    <select id="getShopCollectEntity" resultType="cn.kt.mall.shop.collect.entity.ShopCollectEntity">
+        SELECT * FROM tb_shop_shop_collect WHERE userId=#{userId} AND shopId=#{shopId} limit 0,1
+    </select>
+    <select id="getShopCollectEntityListCount" parameterType="string" resultType="int">
+        SELECT count(1) FROM tb_shop_shop_collect WHERE userId=#{userId}
+    </select>
+
+    <select id="getShopCollectEntityList" resultType="cn.kt.mall.shop.collect.entity.ShopCollectEntity">
+        SELECT * FROM tb_shop_shop_collect WHERE userId=#{userId} limit #{offset},#{pageSize}
+    </select>
+
+    <insert id="addGoodCollect" parameterType="string" flushCache="true">
+        INSERT INTO tb_shop_good_collect(id, userId, goodId)
+        VALUES (#{id}, #{userId}, #{goodId})
+    </insert>
+
+    <delete id="delGoodCollectBatch" flushCache="true">
+        DELETE FROM tb_shop_good_collect WHERE userId=#{userId} AND goodId in
+        <foreach collection="goodIds" item="goodId" open="(" close=")" separator="," index="index">
+            #{goodId}
+        </foreach>
+    </delete>
+
+    <select id="getGoodCollectEntity" resultType="cn.kt.mall.shop.collect.entity.GoodCollectEntity">
+        SELECT * FROM tb_shop_good_collect WHERE userId=#{userId} AND goodId=#{goodId} limit 0,1
+    </select>
+
+    <select id="getGoodCollectEntityListCount" parameterType="string" resultType="int">
+        SELECT count(1) FROM tb_shop_good_collect WHERE userId=#{userId}
+    </select>
+
+    <select id="getGoodCollectEntityList" resultType="cn.kt.mall.shop.collect.entity.GoodCollectEntity">
+        SELECT * FROM tb_shop_good_collect WHERE userId=#{userId} limit #{offset},#{pageSize};
+    </select>
+
+</mapper>

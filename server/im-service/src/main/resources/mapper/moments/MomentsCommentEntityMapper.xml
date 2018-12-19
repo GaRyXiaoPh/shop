@@ -1,0 +1,134 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="cn.kt.mall.im.moments.mapper.MomentsCommentEntityMapper">
+	<resultMap id="BaseResultMap"
+		type="cn.kt.mall.im.moments.entity.MomentsCommentEntity">
+		<id column="id" property="id" jdbcType="BIGINT" />
+		<result column="reply_id" property="replyId" jdbcType="BIGINT" />
+		<result column="moments_id" property="momentsId"
+			jdbcType="BIGINT" />
+		<result column="user_id" property="userId" jdbcType="VARCHAR" />
+		<result column="content" property="content" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime"
+			jdbcType="TIMESTAMP" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, reply_id, moments_id, user_id, content, create_time
+	</sql>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap"
+		parameterType="java.lang.Long">
+		select
+		<include refid="Base_Column_List" />
+		from tb_moments_comment
+		where id = #{id,jdbcType=BIGINT}
+	</select>
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+		delete from
+		tb_moments_comment
+		where moments_id = #{momentsId,jdbcType=BIGINT}
+	</delete>
+	
+	<delete id="deleteByMomentsId" parameterType="java.lang.Long">
+		delete from
+		tb_moments_comment
+		where id = #{id,jdbcType=BIGINT}
+	</delete>
+	
+	<select id="selectCommentList" resultType="cn.kt.mall.im.moments.vo.CommentRespVO">
+		select 
+			t.id,t.reply_id as replyId,t.moments_id as momentsId,
+		    t.user_id as userId,t.content,t.create_time as createTime,ir.remark_name as remarkName,
+		    u.avatar,u.nick,u.username
+		from tb_moments_comment t
+		left join tb_moments_comment m on t.moments_id = m.id
+		left join tb_user u on t.user_id = u.id
+		left join tb_im_user_remark ir on ir.friend_id = t.user_id and m.user_id = #{userId}
+		where t.moments_id in
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+	
+	<insert id="insert"
+		parameterType="cn.kt.mall.im.moments.entity.MomentsCommentEntity">
+		insert into tb_moments_comment (id, reply_id,
+		moments_id,
+		user_id, content, create_time
+		)
+		values
+		(#{id,jdbcType=BIGINT}, #{replyId,jdbcType=BIGINT},
+		#{momentsId,jdbcType=BIGINT},
+		#{userId,jdbcType=VARCHAR},
+		#{content,jdbcType=VARCHAR}, #{createTime,jdbcType=TIMESTAMP}
+		)
+	</insert>
+	<insert id="insertSelective" parameterType="cn.kt.mall.im.moments.entity.MomentsCommentEntity" keyProperty="id" useGeneratedKeys="true">
+		insert into tb_moments_comment
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			id,
+			<if test="replyId != null">
+				reply_id,
+			</if>
+			<if test="momentsId != null">
+				moments_id,
+			</if>
+			<if test="userId != null">
+				user_id,
+			</if>
+			<if test="content != null">
+				content,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			#{id,jdbcType=BIGINT},
+			<if test="replyId != null">
+				#{replyId,jdbcType=BIGINT},
+			</if>
+			<if test="momentsId != null">
+				#{momentsId,jdbcType=BIGINT},
+			</if>
+			<if test="userId != null">
+				#{userId,jdbcType=VARCHAR},
+			</if>
+			<if test="content != null">
+				#{content,jdbcType=VARCHAR},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective"
+		parameterType="cn.kt.mall.im.moments.entity.MomentsCommentEntity">
+		update tb_moments_comment
+		<set>
+			<if test="replyId != null">
+				reply_id = #{replyId,jdbcType=BIGINT},
+			</if>
+			<if test="momentsId != null">
+				moments_id = #{momentsId,jdbcType=BIGINT},
+			</if>
+			<if test="userId != null">
+				user_id = #{userId,jdbcType=VARCHAR},
+			</if>
+			<if test="content != null">
+				content = #{content,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				create_time = #{createTime,jdbcType=TIMESTAMP},
+			</if>
+		</set>
+		where id = #{id,jdbcType=BIGINT}
+	</update>
+	<update id="updateByPrimaryKey"
+		parameterType="cn.kt.mall.im.moments.entity.MomentsCommentEntity">
+		update tb_moments_comment
+		set reply_id =
+		#{replyId,jdbcType=BIGINT},
+		moments_id = #{momentsId,jdbcType=BIGINT},
+		user_id = #{userId,jdbcType=VARCHAR},
+		content =
+		#{content,jdbcType=VARCHAR},
+		create_time =
+		#{createTime,jdbcType=TIMESTAMP}
+		where id = #{id,jdbcType=BIGINT}
+	</update>
+</mapper>

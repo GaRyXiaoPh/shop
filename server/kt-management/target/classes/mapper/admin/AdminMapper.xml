@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.management.admin.dao.AdminDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <insert id="add" parameterType="cn.kt.mall.management.admin.entity.AdminEntity" flushCache="true">
+        INSERT INTO tb_admin(id,account,username, password, salt ,remark,creator, position)
+        VALUES(#{id},#{account}, #{username}, #{password}, #{salt} ,#{remark},#{creator}, #{position})
+    </insert>
+
+    <update id="updatePassword" parameterType="string" flushCache="true">
+        UPDATE tb_admin SET password = #{password}, salt = #{salt}, lastTime = NOW() WHERE id = #{id}
+    </update>
+
+    <select id="getById" parameterType="string" resultType="cn.kt.mall.management.admin.entity.AdminEntity">
+        SELECT * FROM tb_admin WHERE id = #{id} limit 0,1
+    </select>
+
+    <update id="delete" parameterType="string">
+        DELETE FROM tb_admin where id= #{userId}
+    </update>
+
+    <select id="getByAccount" parameterType="string" resultType="cn.kt.mall.management.admin.entity.AdminEntity">
+        SELECT * FROM tb_admin WHERE account = #{account} limit 0,1
+    </select>
+
+    <select id="getUserList" resultType="cn.kt.mall.common.admin.model.AdminInfo">
+        select ta.*,tc.name,tb.role_id as roleId from tb_admin ta
+        left join tb_admin_user_role tb on ta.id = tb.user_id
+        left join tb_admin_role tc on tc.role_id=tb.role_id
+        order by ta.createTime desc
+    </select>
+
+    <!--获取资金（充值扣除）管理员相关信息-->
+    <select id="getAdminList" resultType="cn.kt.mall.management.admin.entity.AdminEntity">
+        select id,account  from tb_admin
+    </select>
+</mapper>

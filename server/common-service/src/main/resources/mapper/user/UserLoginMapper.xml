@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.common.user.dao.UserLoginDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+    <insert id="add" parameterType="cn.kt.mall.common.user.entity.UserLoginEntity" flushCache="true">
+        INSERT INTO tb_user_login(id, userId, token, loginTime, expireTime, status)
+        VALUES(#{id}, #{userId}, #{token}, NOW(), DATE_ADD(NOW(),INTERVAL #{expire} SECOND), '0')
+    </insert>
+
+    <update id="updateLogin" flushCache="true">
+        UPDATE tb_user_login SET token = #{token}, loginTime = NOW(), expireTime = DATE_ADD(NOW(),INTERVAL #{expire} SECOND), status = '0'
+        WHERE userId = #{userId}
+    </update>
+
+    <update id="updateLogout" flushCache="true">
+        UPDATE tb_user_login SET status = '1', lastTime = NOW()
+        WHERE userId = #{userId}
+    </update>
+
+    <select id="getByUserId" parameterType="string" resultType="cn.kt.mall.common.user.entity.UserLoginEntity">
+        SELECT * FROM tb_user_login WHERE userId = #{userId} LIMIT 0,1
+    </select>
+</mapper>

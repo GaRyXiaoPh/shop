@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.management.admin.dao.PayTypeDAO">
+
+    <!-- 支付方式查询 -->
+    <select id="payTypeList" resultType="cn.kt.mall.management.admin.vo.PayTypeVO" parameterType="java.lang.String">
+         SELECT
+             pc.*
+         FROM
+             tb_good_pay_config pc,
+             tb_shop_good_pay gp
+         WHERE
+            pc.id = gp.goodPayId
+        <if test="goodId != null and goodId != ''">
+            AND gp.goodId = #{goodId}
+        </if>
+         GROUP BY pc.payName
+         ORDER BY pc.id ASC
+    </select>
+
+    <!-- 支付比例修改 -->
+    <update id="updatePayRatio" parameterType="string">
+        UPDATE tb_good_pay_config set balanceRatio = #{balanceRatio},
+            otherRatio = #{otherRatio}  where id = #{id}
+    </update>
+
+    <!-- 支付方式比例查询-->
+    <select id="getPayRatio" resultType="cn.kt.mall.management.admin.vo.PayTypeVO">
+        SELECT * FROM  tb_good_pay_config WHERE payType = '2' ORDER BY balanceRatio ASC
+    </select>
+</mapper>

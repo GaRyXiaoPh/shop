@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="cn.kt.mall.front.user.mapper.RedpaperReceiveEntityMapper">
+	<resultMap id="BaseResultMap"
+		type="cn.kt.mall.front.user.entity.RedpaperReceiveEntity">
+		<id column="id" property="id" jdbcType="BIGINT" />
+		<result column="sendId" property="sendId" jdbcType="VARCHAR" />
+		<result column="redpaperId" property="redpaperId"
+			jdbcType="BIGINT" />
+		<result column="receiveId" property="receiveId"
+			jdbcType="VARCHAR" />
+		<result column="sortNo" property="sortNo"
+			jdbcType="INTEGER" />
+		<result column="amount" property="amount" jdbcType="DECIMAL" />
+		<result column="words" property="words" jdbcType="VARCHAR" />
+		<result column="createTime" property="createTime"
+			jdbcType="TIMESTAMP" />
+		<result column="lastTime" property="lastTime"
+			jdbcType="TIMESTAMP" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, sendId, redpaperId, receiveId, amount, words,sortNo,
+		createTime, lastTime
+	</sql>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap"
+		parameterType="java.lang.Long">
+		select
+		<include refid="Base_Column_List" />
+		from tb_redpaper_receive
+		where id = #{id,jdbcType=BIGINT}
+	</select>
+	
+	<select id="getByReceivedRedId" resultMap="BaseResultMap" parameterType="java.lang.String">
+		select
+		<include refid="Base_Column_List" />
+		from tb_redpaper_receive
+		where redpaperId = #{redId,jdbcType=VARCHAR} and receiveId != '0'
+	</select>
+	
+	<select id="getByRedId" resultMap="BaseResultMap"
+		parameterType="java.lang.String">
+		select
+		<include refid="Base_Column_List" />
+		from tb_redpaper_receive
+		where redpaperId = #{redId,jdbcType=VARCHAR} and receiveId = #{userId,jdbcType=VARCHAR}
+	</select>
+	
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+		delete from
+		tb_redpaper_receive
+		where id = #{id,jdbcType=BIGINT}
+	</delete>
+	<insert id="insert"
+		parameterType="cn.kt.mall.front.user.entity.RedpaperReceiveEntity">
+		insert into tb_redpaper_receive (sendId, redpaperId,
+		receiveId, amount, words, sortNo)
+		values
+		(#{sendId,jdbcType=VARCHAR},
+		#{redpaperId,jdbcType=BIGINT},
+		#{receiveId,jdbcType=VARCHAR},
+		#{amount,jdbcType=DECIMAL}, #{words,jdbcType=VARCHAR}, #{sortNo,jdbcType=INTEGER})
+	</insert>
+	
+	<insert id="insertBatch">
+		insert into tb_redpaper_receive (sendId, redpaperId,
+		receiveId, amount, words, sortNo) values
+		<foreach collection="lists" item="item" separator=",">
+			(#{item.sendId,jdbcType=VARCHAR},
+			#{item.redpaperId,jdbcType=BIGINT},
+			#{item.receiveId,jdbcType=VARCHAR},
+			#{item.amount,jdbcType=DECIMAL}, #{item.words,jdbcType=VARCHAR}, #{item.sortNo,jdbcType=INTEGER})
+		</foreach>
+	</insert>
+	
+	<insert id="insertSelective"
+		parameterType="cn.kt.mall.front.user.entity.RedpaperReceiveEntity">
+		insert into tb_redpaper_receive
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="sendId != null">
+				sendId,
+			</if>
+			<if test="redpaperId != null">
+				redpaperId,
+			</if>
+			<if test="receiveId != null">
+				receiveId,
+			</if>
+			<if test="amount != null">
+				amount,
+			</if>
+			<if test="words != null">
+				words,
+			</if>
+			<if test="sortNo != null">
+				sortNo,
+			</if>
+			<if test="createTime != null">
+				createTime,
+			</if>
+			<if test="lastTime != null">
+				lastTime,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=BIGINT},
+			</if>
+			<if test="sendId != null">
+				#{sendId,jdbcType=VARCHAR},
+			</if>
+			<if test="redpaperId != null">
+				#{redpaperId,jdbcType=BIGINT},
+			</if>
+			<if test="receiveId != null">
+				#{receiveId,jdbcType=VARCHAR},
+			</if>
+			<if test="amount != null">
+				#{amount,jdbcType=DECIMAL},
+			</if>
+			<if test="words != null">
+				#{words,jdbcType=VARCHAR},
+			</if>
+			<if test="sortNo != null">
+				#{sortNo,jdbcType=INTEGER},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="lastTime != null">
+				#{lastTime,jdbcType=TIMESTAMP},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective"
+		parameterType="cn.kt.mall.front.user.entity.RedpaperReceiveEntity">
+		update tb_redpaper_receive
+		<set>
+			<if test="sendId != null">
+				sendId = #{sendId,jdbcType=VARCHAR},
+			</if>
+			<if test="redpaperId != null">
+				redpaperId = #{redpaperId,jdbcType=BIGINT},
+			</if>
+			<if test="receiveId != null">
+				receiveId = #{receiveId,jdbcType=VARCHAR},
+			</if>
+			<if test="amount != null">
+				amount = #{amount,jdbcType=DECIMAL},
+			</if>
+			<if test="words != null">
+				words = #{words,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				createTime = #{createTime,jdbcType=TIMESTAMP},
+			</if>
+			<if test="lastTime != null">
+				lastTime = #{lastTime,jdbcType=TIMESTAMP},
+			</if>
+		</set>
+		where id = #{id,jdbcType=BIGINT}
+	</update>
+	
+	<update id="updateSelectiveByIdAndSortNo"
+		parameterType="cn.kt.mall.front.user.entity.RedpaperReceiveEntity">
+		update tb_redpaper_receive
+		<set>
+			<if test="receiveId != null">
+				receiveId = #{receiveId,jdbcType=VARCHAR},
+			</if>
+			<if test="words != null">
+				words = #{words,jdbcType=VARCHAR},
+			</if>
+		</set>
+		where id = #{id,jdbcType=BIGINT} and sortNo = #{sortNo}
+	</update>
+	
+	<select id="countUnReceived" resultType="java.math.BigDecimal">
+		select sum(amount) from tb_redpaper_receive where redpaperId = #{redId,jdbcType=VARCHAR} and receiveId = '0' 
+	</select>
+</mapper>

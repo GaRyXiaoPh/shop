@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.shop.mapper.ShopCommentDAO">
+
+    <insert id="insert" parameterType="cn.kt.mall.shop.shop.entity.ShopCommentEntity">
+        insert into tb_shop_comment(pid,shopId,tradeId,userId,commentType,commentText,anonymity,commentPic,score) values
+        (#{pid},#{shopId},#{tradeId},#{userId},#{commentType},#{commentText},#{anonymity},#{commentPic},#{score})
+    </insert>
+
+    <delete id="deleteById" parameterType="string">
+        delete from tb_shop_comment where id = #{id}
+    </delete>
+
+    <select id="listByPageCount" parameterType="string" resultType="int">
+        select count(1) from tb_shop_comment t
+        left join tb_user u on u.id = t.userId
+        where t.shopId = #{shopId}
+        <if test="tradeId != null and tradeId != ''">
+            and t.tradeId = #{tradeId}
+        </if>
+        <if test="searchName != null and searchName != ''">
+            and u.userName like concat('%',#{searchName},'%')
+        </if>
+        <if test="startTime != null">and t.createTime <![CDATA[ >= ]]> #{startTime}</if>
+		<if test="endTime != null">and t.createTime <![CDATA[ <= ]]> #{endTime}</if>
+    </select>
+
+    <select id="listByPage" resultType="cn.kt.mall.shop.shop.vo.ShopCommentVO">
+        select t.*,u.userName,u.nick,u.avatar from tb_shop_comment t
+        left join tb_user u on u.id = t.userId
+        where t.shopId = #{shopId}
+        <if test="tradeId != null and tradeId != ''">
+            and t.tradeId = #{tradeId}
+        </if>
+        <if test="searchName != null and searchName != ''">
+            and u.userName like concat('%',#{searchName},'%')
+        </if>
+        <if test="startTime != null">and t.createTime <![CDATA[ >= ]]> #{startTime}</if>
+		<if test="endTime != null">and t.createTime <![CDATA[ <= ]]> #{endTime}</if>
+        limit #{offset},#{pageSize}
+    </select>
+
+    <select id="getMyCommentByTradeId" resultType="cn.kt.mall.shop.shop.entity.ShopCommentEntity">
+        select * from tb_shop_comment where tradeId = #{tradeId}
+        <if test="shopId != null and shopId != ''">
+            and shopId = #{shopId}
+        </if>
+        <if test="userId != null and userId != ''">
+            and userId = #{userId}
+        </if>
+    </select>
+    
+    <update id="updateShopPoint" parameterType="string">
+    	UPDATE tb_shop_shop
+		SET shopPoint = (
+			SELECT IFNULL(avg(t.score),5)
+			FROM tb_shop_comment t where t.shopId = #{shopId} and t.pid = 0
+		)
+		WHERE id = #{shopId}
+    </update>
+    
+</mapper>

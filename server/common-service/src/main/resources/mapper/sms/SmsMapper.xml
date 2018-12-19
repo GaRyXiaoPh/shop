@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.common.sms.mapper.SmsDAO">
+
+    <update id="checkMobileCaptcha" parameterType="string">
+        UPDATE tb_sms_captcha set status = '1' where mobile = #{mobile} and code = #{code} and status = '0' and
+        lastTime > (CURRENT_TIMESTAMP - INTERVAL 5 MINUTE)
+    </update>
+
+    <insert id="addSmsCaptcha" parameterType="cn.kt.mall.common.sms.entity.SmsCaptcha">
+        INSERT INTO tb_sms_captcha(id, mobile, code, status, lastTime) VALUES (#{id}, #{mobile}, #{code}, '0', NOW())
+    </insert>
+
+    <update id="updateSmsCaptcha" parameterType="cn.kt.mall.common.sms.entity.SmsCaptcha">
+        UPDATE tb_sms_captcha SET code = #{code}, status = '0', lastTime = NOW() WHERE mobile = #{mobile}
+    </update>
+
+    <update id="updateSmsCaptchaDisable" parameterType="string">
+        UPDATE tb_sms_captcha SET status = '1' where mobile = #{mobile} and status = '0'
+    </update>
+
+    <select id="getAvailableCaptchaCntByMobile" parameterType="string" resultType="int">
+        SELECT
+        count(1) AS cnt
+        FROM
+        tb_sms_captcha
+        WHERE
+        mobile = #{mobile}
+        AND STATUS = '0'
+        AND lastTime > (
+        CURRENT_TIMESTAMP - INTERVAL 1 MINUTE
+        )
+    </select>
+
+    <insert id="addSmsRecord" parameterType="cn.kt.mall.common.sms.entity.SmsRecordEntity">
+        INSERT INTO tb_sms_record(id, mobile, type, content, creator, createTime)
+        VALUES(#{id}, #{mobile}, #{type}, #{content}, #{creator}, NOW())
+    </insert>
+    
+    <select id="getAllCount" resultType="int">
+        SELECT
+            IFNULL(COUNT(1), 0) as cnt
+        FROM
+            tb_sms_record
+        WHERE 1 = 1
+        <if test="userId != null">
+          AND creator = #{userId}
+        </if>
+        AND createTime &gt;= #{startTime}
+        AND createTime &lt; #{endTime}
+    </select>
+    
+    <select id="getManagementList" resultType="cn.kt.mall.common.sms.entity.SmsRecordEntity">
+        SELECT
+            *
+        FROM
+            tb_sms_record
+        WHERE 1 = 1
+        <if test="userId != null">
+        AND creator = #{userId}
+        </if>
+        AND createTime &gt;= #{startTime}
+        AND createTime &lt; #{endTime}
+        ORDER BY
+            createTime DESC
+        LIMIT #{offset}, #{pageSize}
+    </select>
+</mapper>

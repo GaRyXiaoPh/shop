@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="cn.kt.mall.im.moments.mapper.MomentsImgEntityMapper">
+	<resultMap id="BaseResultMap"
+		type="cn.kt.mall.im.moments.entity.MomentsImgEntity">
+		<id column="id" property="id" jdbcType="BIGINT" />
+		<result column="moments_id" property="momentsId"
+			jdbcType="BIGINT" />
+		<result column="url" property="url" jdbcType="VARCHAR" />
+		<result column="create_time" property="createTime"
+			jdbcType="TIMESTAMP" />
+	</resultMap>
+	<sql id="Base_Column_List">
+		id, moments_id, url, create_time
+	</sql>
+	<select id="selectByPrimaryKey" resultMap="BaseResultMap"
+		parameterType="java.lang.Long">
+		select
+		<include refid="Base_Column_List" />
+		from tb_moments_img
+		where id = #{id,jdbcType=BIGINT}
+	</select>
+	
+	<select id="selectImgList" resultMap="BaseResultMap">
+		select
+		<include refid="Base_Column_List" />
+		from tb_moments_img
+		where moments_id in
+		<foreach collection="list" item="item" open="(" close=")" separator=",">
+			#{item}
+		</foreach>
+	</select>
+	
+	<delete id="deleteByPrimaryKey" parameterType="java.lang.Long">
+		delete from
+		tb_moments_img
+		where id = #{id,jdbcType=BIGINT}
+	</delete>
+	
+	<delete id="deleteByMomentsId" parameterType="java.lang.Long">
+		delete from
+		tb_moments_img
+		where moments_id = #{momentsId,jdbcType=BIGINT}
+	</delete>
+	
+	<insert id="insert"
+		parameterType="cn.kt.mall.im.moments.entity.MomentsImgEntity">
+		insert into tb_moments_img (id, moments_id, url,
+		create_time)
+		values (#{id,jdbcType=BIGINT},
+		#{momentsId,jdbcType=BIGINT},
+		#{url,jdbcType=VARCHAR},
+		#{createTime,jdbcType=TIMESTAMP})
+	</insert>
+	
+	<insert id="insertBatch" parameterType="cn.kt.mall.im.moments.entity.MomentsImgEntity">
+		insert into tb_moments_img (moments_id, url) values 
+		<foreach collection="list" item="item" separator=",">
+			(
+			#{item.momentsId,jdbcType=BIGINT},
+			#{item.url,jdbcType=VARCHAR}
+			)
+		</foreach>
+	</insert>
+	
+	<insert id="insertSelective"
+		parameterType="cn.kt.mall.im.moments.entity.MomentsImgEntity">
+		insert into tb_moments_img
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				id,
+			</if>
+			<if test="momentsId != null">
+				moments_id,
+			</if>
+			<if test="url != null">
+				url,
+			</if>
+			<if test="createTime != null">
+				create_time,
+			</if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="id != null">
+				#{id,jdbcType=BIGINT},
+			</if>
+			<if test="momentsId != null">
+				#{momentsId,jdbcType=BIGINT},
+			</if>
+			<if test="url != null">
+				#{url,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				#{createTime,jdbcType=TIMESTAMP},
+			</if>
+		</trim>
+	</insert>
+	<update id="updateByPrimaryKeySelective"
+		parameterType="cn.kt.mall.im.moments.entity.MomentsImgEntity">
+		update tb_moments_img
+		<set>
+			<if test="momentsId != null">
+				moments_id = #{momentsId,jdbcType=BIGINT},
+			</if>
+			<if test="url != null">
+				url = #{url,jdbcType=VARCHAR},
+			</if>
+			<if test="createTime != null">
+				create_time = #{createTime,jdbcType=TIMESTAMP},
+			</if>
+		</set>
+		where id = #{id,jdbcType=BIGINT}
+	</update>
+	<update id="updateByPrimaryKey"
+		parameterType="cn.kt.mall.im.moments.entity.MomentsImgEntity">
+		update tb_moments_img
+		set moments_id =
+		#{momentsId,jdbcType=BIGINT},
+		url = #{url,jdbcType=VARCHAR},
+		create_time = #{createTime,jdbcType=TIMESTAMP}
+		where id =
+		#{id,jdbcType=BIGINT}
+	</update>
+</mapper>

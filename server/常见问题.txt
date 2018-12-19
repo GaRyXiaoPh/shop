@@ -1,0 +1,5 @@
+1. MySql中NULL和空字符串的区别
+
+假设tb_shop_good表的userId字段是NULL，
+
+那么语句select * from tb_shop_good where userId != "123" 不会返回该行纪录。

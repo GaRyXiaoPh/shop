@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.coupon.repository.UserReleaseCouponLogEntityMapper">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+     <insert id="addUserReleaseCouponLogEntity" parameterType="cn.kt.mall.shop.coupon.entity.UserReleaseCouponLogEntity" >
+        insert into tb_user_release_coupon_log(userId, couponLogId, amount,createTime,releaseAfterNum,releaseBeforNum,releaseType)
+         values
+         (#{userid},#{couponlogid},#{amount},#{createtime},#{releaseAfterNum},#{releaseBeforNum},#{releaseType})
+    </insert>
+
+    <!--批量插入-->
+    <insert id="addPatchUserReleaseCouponLogEntity">
+        insert into tb_user_release_coupon_log(userId, couponLogId, amount,createTime,releaseAfterNum,releaseBeforNum,releaseType)
+        VALUES
+        <foreach collection="list" separator="," item="item">
+            (#{item.userid},#{item.couponlogid},#{item.amount},#{item.createtime},#{item.releaseAfterNum},#{item.releaseBeforNum},#{item.releaseType})
+        </foreach>
+    </insert>
+
+
+</mapper>

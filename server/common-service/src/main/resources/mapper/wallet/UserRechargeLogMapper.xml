@@ -1,0 +1,183 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.common.wallet.mapper.UserRechargeLogDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+
+
+    <insert id="addUserRechargeLog" parameterType="cn.kt.mall.common.wallet.entity.UserRechargeLog" flushCache="true">
+        INSERT INTO tb_user_recharge_log(id, userId,  rechargeAmount, rechargeType, createTime,rechargeUser,operationType,status,customerType,remarks)
+        VALUES(#{id}, #{userId}, #{rechargeAmount}, #{rechargeType},NOW(),#{rechargeUser},#{operationType},#{status},#{customerType},#{remarks})
+    </insert>
+    <select id="getUserRechargeLogListByUserId" parameterType="cn.kt.mall.common.wallet.vo.UserRechargeLogVO"
+            resultType="cn.kt.mall.common.wallet.vo.UserRechargeLogVO">
+        SELECT
+        l.id AS id,
+        l.createTime AS createTime,
+        l.rechargeType AS rechargeType,
+        l.operationType AS operationType,
+        l.rechargeAmount AS rechargeAmount,
+        l.rechargeUser AS rechargeUser,
+        r.trueName as trueName
+        FROM
+        tb_user_recharge_log l LEFT JOIN tb_user r ON r.id =l.rechargeUser
+        WHERE
+        l.userId =#{userId}
+        <where>
+            <if test="rechargeType!=null">
+                and l.rechargeType=#{rechargeType}
+            </if>
+            <if test="operationType!=null">
+                and l.operationType=#{operationType}
+            </if>
+            <if test="mobile!=null">
+                and l.mobile=#{mobile}
+            </if>
+        </where>
+    </select>
+
+    <select id="getUserFundsByUserId"
+            resultType="cn.kt.mall.common.wallet.vo.UserFundsVO">
+        SELECT
+        a.id AS id,
+        a.createTime AS createTime,
+        a.rechargeType AS rechargeType,
+        a.operationType AS operationType,
+        a.trueName AS RechargeUser,
+        a.rechargeAmount AS rechargeAmount,
+        a.mobile AS RechargeUserMobile,
+        a.accountType as accountType,
+        a.shopType as shopType,
+        a.remarks as remarks
+        FROM
+        (
+        SELECT
+        l.id AS id,
+        l.createTime AS createTime,
+        l.rechargeType AS rechargeType,
+        l.operationType AS operationType,
+        u.trueName AS trueName,
+        l.rechargeAmount AS rechargeAmount,
+        l.userId as userId,
+        u.mobile as mobile,
+        u.level as accountType,
+        p.shopLevel as shopType,
+        l.remarks as remarks
+        FROM
+        tb_user_recharge_log l
+        LEFT JOIN tb_user u ON u.id = l.rechargeUser
+        LEFT JOIN tb_shop_shop p ON p.userId =l.rechargeUser
+        WHERE
+        l.userId = #{userId}
+        <if test="rechargeType != null and rechargeType != ''">
+            and l.rechargeType=#{rechargeType}
+        </if>
+        <if test="operationType != null and operationType != ''">
+            and l.operationType=#{operationType}
+        </if>
+        <if test="beginTime != null and beginTime != ''">
+            <![CDATA[ AND l.createTime >= #{beginTime}]]>
+        </if>
+        <if test="endTime != null and endTime != ''">
+            <![CDATA[ AND l.createTime <= #{endTime}]]>
+        </if>
+        ) AS a,
+        tb_user u
+        WHERE
+        a.userId = u.id
+        <if test="mobile != null and mobile != ''">
+            and a.mobile=#{mobile}
+        </if>
+        order by createTime desc
+    </select>
+    <!--根据id查询-->
+    <select id="getUserRechargeLogListById" parameterType="string"
+            resultType="cn.kt.mall.common.wallet.vo.UserRechargeLogVO">
+        SELECT * FROM tb_user_recharge_log WHERE id = #{id}
+    </select>
+    <!--更新日志状态-->
+    <update id="updateLogStatus">
+        UPDATE tb_user_recharge_log SET status = #{status}
+        WHERE id = #{id}
+    </update>
+
+
+    <select id="getFundDetailListByShop" resultType="cn.kt.mall.common.wallet.vo.CashRecordVO">
+        SELECT
+        l.createTime AS createTime,
+        l.operationType AS operationType,
+        l.rechargeType AS rechargeType,
+        l.rechargeAmount AS rechargeAmount,
+        l.customerType AS customerType,
+        l.status AS status,
+        l.id AS id,
+        l.userId AS userId,
+        l.rechargeUser AS rechargeUser,
+        l.remarks as remarks
+        FROM
+        tb_user_recharge_log l
+        WHERE 1=1
+        <if test="beginTime != null and beginTime != ''">
+            <![CDATA[ AND l.createTime >= #{beginTime}]]>
+        </if>
+        <if test="endTime != null and endTime != ''">
+            <![CDATA[ AND l.createTime <= #{endTime}]]>
+        </if>
+        <if test="userList != null and userList.size()>0">
+            AND l.userId IN
+            <foreach collection="userList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="phone != null and phone != ''">
+            AND l.rechargeUser = (SELECT t.id FROM tb_user t WHERE t.mobile = #{phone})
+        </if>
+        <if test="operatorUserPhone != null and operatorUserPhone != ''">
+            AND l.userId = (SELECT t.id FROM tb_user t WHERE t.mobile = #{operatorUserPhone})
+        </if>
+        <if test="status != null and status != ''">
+            AND l.status = #{status}
+        </if>
+        ORDER BY l.createTime DESC
+    </select>
+
+    <!-- -->
+    <select id="getFundDetailListByShopExport" resultType="cn.kt.mall.common.wallet.vo.CashRecordVO">
+        SELECT
+        l.createTime AS createTime,
+        l.operationType AS operationType,
+        l.rechargeType AS rechargeType,
+        l.rechargeAmount AS rechargeAmount,
+        l.customerType AS customerType,
+        l.status AS status,
+        l.id AS id,
+        l.userId AS userId,
+        l.rechargeUser AS rechargeUser,
+        l.remarks as remarks
+        FROM
+        tb_user_recharge_log l
+        WHERE 1=1
+        <if test="beginTime != null and beginTime != ''">
+            <![CDATA[ AND l.createTime >= #{beginTime}]]>
+        </if>
+        <if test="endTime != null and endTime != ''">
+            <![CDATA[ AND l.createTime <= #{endTime}]]>
+        </if>
+        <if test="userList != null and userList.size()>0">
+            AND l.userId IN
+            <foreach collection="userList" index="index" item="item" open="(" separator="," close=")">
+                #{item}
+            </foreach>
+        </if>
+        <if test="phone != null and phone != ''">
+            AND l.rechargeUser = (SELECT t.id FROM tb_user t WHERE t.mobile = #{phone})
+        </if>
+        <if test="operatorUserPhone != null and operatorUserPhone != ''">
+            AND l.userId = (SELECT t.id FROM tb_user t WHERE t.mobile = #{operatorUserPhone})
+        </if>
+        <if test="status != null and status != ''">
+            AND l.status = #{status}
+        </if>
+        ORDER BY l.createTime DESC
+    </select>
+</mapper>

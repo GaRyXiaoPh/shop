@@ -1,0 +1,659 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.management.logistics.dao.LogisticsExportDAO">
+
+    <select id="getInteriorNoList" parameterType ="cn.kt.mall.management.logistics.vo.CurrentTimeResqVO" resultType="cn.kt.mall.management.logistics.vo.InneriornoVO">
+        select interiorNo from tb_shop_trade where 1=1
+        <if test ="currentTimeVOList !=null and currentTimeVOList.size()>0">
+            and  currentTime in
+            <foreach collection="currentTimeVOList" separator="," close=")" open="(" item="item">
+                #{item}
+            </foreach>
+        </if>
+
+        GROUP BY interiorNo
+
+    </select>
+
+
+
+
+    <select id="getCurrentTimeVOList" parameterType ="cn.kt.mall.management.logistics.vo.LogisticsRquestVO" resultType="cn.kt.mall.management.logistics.vo.CurrentTimeVO">
+        select s.currentTime  from (
+        select s.*, tbs.trueName shopUserName from (
+        select s.*,tss.shopName shopName,
+
+        tss.userId userId,
+        tss.shopNo shopNo,
+        tss.mobile shopUserPhone from (
+        select tsti.tradeId tradeId,tsti.shopId shopId,
+        tsti.goodId goodId,
+        tsti.goodName goodName,
+        tsti.buyNum buyNum,
+        tsti.buyUserId buyUserId,
+        tst.createTime createTime,
+        tst.interiorNo interiorNo,
+        tst.currentTime currentTime,
+        tst.recvName recvName,
+        tst.detailAddress detailAddress,
+        tst.recvMobile recvMobile,
+        tst.status status,
+        tst.tradeNo tradeNo
+        from tb_shop_trade_item tsti  INNER JOIN tb_shop_trade tst
+
+        where  tsti.tradeId = tst.id
+
+        ) s INNER JOIN tb_shop_shop tss where tss.id=s.shopId
+        )s INNER JOIN tb_user tbs where tbs.id = s.userId
+
+        <if test="interiorNo !=null and interiorNo != ''">
+            and  s.interiorNo =#{interiorNo}
+        </if>
+        <if test="shopNo !=null and shopNo != ''">
+            and   s.shopNo like concat('%',#{shopNo},'%')
+        </if>
+
+        <if test="shopName !=null and shopName != ''">
+            and  s.shopName  like concat('%',#{shopName},'%')
+        </if>
+        <if test="shopUserName !=null and shopUserName != ''">
+            and  tbs.trueName  like concat('%',#{shopUserName},'%')
+        </if>
+      <if test="shopUserPhone !=null and shopUserPhone !=''" >
+          and s.shopUserPhone = #{shopUserPhone}
+
+      </if>
+        <if test="recvName !=null and recvName != ''">
+            and  s.recvName like concat('%',#{recvName},'%')
+        </if>
+        <if test="recvMobile !=null and recvMobile != ''">
+            and  s.recvMobile like concat('%',#{recvMobile},'%')
+        </if>
+        <if test="status!=null and status!=''">
+            and  s.status  = #{status}
+
+        </if>
+
+        <if test="goodNames != null and goodNames.size()>0">
+            AND
+            <foreach item="item" index="index" collection="goodNames" open="(" separator="or" close=")">
+                s.goodName like concat('%',#{item},'%')
+            </foreach>
+        </if>
+
+        <if test="startTime != null and startTime !=''">and s.createTime <![CDATA[ >= ]]> #{startTime}</if>
+        <if test="endTime != null and endTime !=''">and s.createTime <![CDATA[ <= ]]> #{endTime}</if>
+        order by s.createTime DESC
+        )s
+        group  by s.currentTime order  by  s.currentTime desc
+
+    </select>
+
+
+    <!---1待发货-->
+    <select id="getInteriorNoListNoSend" parameterType ="cn.kt.mall.management.logistics.vo.LogisticsRquestVO" resultType="cn.kt.mall.management.logistics.vo.CurrentTimeVO">
+        select s.currentTime from (
+        select s.*, tbs.trueName shopUserName from (
+        select s.*,tss.shopName shopName,
+
+        tss.userId userId,
+        tss.shopNo shopNo,
+        tss.mobile shopUserPhone from (
+        select tsti.tradeId tradeId,tsti.shopId shopId,
+        tsti.goodId goodId,
+        tsti.goodName goodName,
+        tsti.buyNum buyNum,
+        tsti.buyUserId buyUserId,
+        tst.createTime createTime,
+        tst.interiorNo interiorNo,
+        tst.currentTime currentTime,
+        tst.recvName recvName,
+        tst.detailAddress detailAddress,
+        tst.recvMobile recvMobile,
+        tst.status status,
+        tst.tradeNo tradeNo
+        from tb_shop_trade_item tsti INNER JOIN tb_shop_trade tst
+        where tsti.tradeId = tst.id and tst.currentTime in (
+
+        SELECT t1.currentTime
+        FROM (
+        SELECT COUNT(*) AS num, s.currentTime
+        FROM (
+        SELECT *
+        FROM tb_shop_trade
+        WHERE currentTime IN (
+        SELECT currentTime
+        FROM tb_shop_trade
+        WHERE status = 1
+        GROUP BY currentTime
+        )
+        ) s
+        GROUP BY s.currentTime
+        ) t1
+        INNER JOIN (
+        SELECT s1.*
+        FROM (
+        SELECT COUNT(*) AS num1, currentTime
+        FROM tb_shop_trade
+        GROUP BY currentTime
+        ) s1
+        ) s2
+        WHERE s2.num1 = t1.num
+        AND t1.currentTime = s2.currentTime
+        )
+        ) s INNER JOIN tb_shop_shop tss where tss.id=s.shopId
+        )s inner JOIN tb_user tbs where tbs.id = s.userId
+
+        <if test="interiorNo !=null and interiorNo != ''">
+            and  s.interiorNo =#{interiorNo}
+        </if>
+        <if test="shopNo !=null and shopNo != ''">
+            and   s.shopNo like concat('%',#{shopNo},'%')
+        </if>
+
+        <if test="shopName !=null and shopName != ''">
+            and  s.shopName  like concat('%',#{shopName},'%')
+        </if>
+        <if test="shopUserPhone !=null and shopUserPhone !=''" >
+            and s.shopUserPhone = #{shopUserPhone}
+
+        </if>
+        <if test="shopUserName !=null and shopUserName != ''">
+            and  tbs.trueName like concat('%',#{shopUserName},'%')
+        </if>
+
+        <if test="recvName !=null and recvName != ''">
+            and  s.recvName like concat('%',#{recvName},'%')
+        </if>
+        <if test="recvMobile !=null and recvMobile != ''">
+            and  s.recvMobile like concat('%',#{recvMobile},'%')
+        </if>
+
+        <if test="goodNames != null and goodNames.size()>0">
+            AND
+            <foreach item="item" index="index" collection="goodNames" open="(" separator="or" close=")">
+                s.goodName like concat('%',#{item},'%')
+            </foreach>
+        </if>
+
+        <if test="startTime != null and startTime !=''">and s.createTime <![CDATA[ >= ]]> #{startTime}</if>
+        <if test="endTime != null and endTime !=''">and s.createTime <![CDATA[ <= ]]> #{endTime}</if>
+			 order by s.createTime DESC
+        )s
+         group  by s.currentTime order by s.currentTime desc
+
+    </select>
+
+    <!---查询已经发货了2-->
+    <select id="getInteriorNoListSended" parameterType ="cn.kt.mall.management.logistics.vo.LogisticsRquestVO" resultType="cn.kt.mall.management.logistics.vo.CurrentTimeVO">
+        select s.currentTime from (
+        select s.*, tbs.trueName shopUserName from (
+        select s.*,tss.shopName shopName,
+        tss.userId userId,
+        tss.shopNo shopNo,
+        tss.mobile shopUserPhone from (
+        select tsti.tradeId tradeId,tsti.shopId shopId,
+        tsti.goodId goodId,
+        tsti.goodName goodName,
+        tsti.buyNum buyNum,
+        tsti.buyUserId buyUserId,
+        tst.createTime createTime,
+        tst.interiorNo interiorNo,
+        tst.currentTime currentTime,
+        tst.recvName recvName,
+        tst.detailAddress detailAddress,
+        tst.recvMobile recvMobile,
+        tst.status status,
+        tst.tradeNo tradeNo
+        from tb_shop_trade_item tsti INNER JOIN tb_shop_trade tst
+        where tsti.tradeId = tst.id and tst.currentTime in (
+
+        SELECT t1.currentTime
+        FROM (
+        SELECT COUNT(*) AS num, s.currentTime
+        FROM (
+        SELECT *
+        FROM tb_shop_trade
+        WHERE currentTime IN (
+        SELECT currentTime
+        FROM tb_shop_trade
+        WHERE status = 2
+        GROUP BY currentTime
+        )
+        ) s
+        GROUP BY s.currentTime
+        ) t1
+        INNER JOIN (
+        SELECT s1.*
+        FROM (
+        SELECT COUNT(*) AS num1, currentTime
+        FROM tb_shop_trade
+        GROUP BY currentTime
+        ) s1
+        ) s2
+        WHERE s2.num1 = t1.num
+        AND t1.currentTime = s2.currentTime
+        )
+        ) s INNER JOIN tb_shop_shop tss where tss.id=s.shopId
+        )s inner JOIN tb_user tbs where tbs.id = s.userId
+        <if test="interiorNo !=null and interiorNo != ''">
+            and  s.interiorNo =#{interiorNo}
+        </if>
+        <if test="shopNo !=null and shopNo != ''">
+            and   s.shopNo like concat('%',#{shopNo},'%')
+        </if>
+
+        <if test="shopName !=null and shopName != ''">
+            and  s.shopName  like concat('%',#{shopName},'%')
+        </if>
+        <if test="shopUserPhone !=null and shopUserPhone !=''" >
+            and s.shopUserPhone = #{shopUserPhone}
+
+        </if>
+        <if test="shopUserName !=null and shopUserName != ''">
+            and  tbs.trueName like concat('%',#{shopUserName},'%')
+        </if>
+
+        <if test="recvName !=null and recvName != ''">
+            and  s.recvName like concat('%',#{recvName},'%')
+        </if>
+        <if test="recvMobile !=null and recvMobile != ''">
+            and  s.recvMobile like concat('%',#{recvMobile},'%')
+        </if>
+        <if test="goodNames != null and goodNames.size()>0">
+            AND
+            <foreach item="item" index="index" collection="goodNames" open="(" separator="or" close=")">
+                s.goodName like concat('%',#{item},'%')
+            </foreach>
+        </if>
+
+        <if test="startTime != null and startTime !=''">and s.createTime <![CDATA[ >= ]]> #{startTime}</if>
+        <if test="endTime != null and endTime !=''">and s.createTime <![CDATA[ <= ]]> #{endTime}</if>
+			 order by s.createTime DESC
+        )s
+         group  by s.currentTime order by s.currentTime desc
+
+    </select>
+
+   <!-- 查询已完成3.已完成 -->
+
+    <select id="getInteriorNoListFinish" parameterType ="cn.kt.mall.management.logistics.vo.LogisticsRquestVO" resultType="cn.kt.mall.management.logistics.vo.CurrentTimeVO">
+        select s.currentTime from (
+        select s.*, tbs.trueName shopUserName from (
+        select s.*,tss.shopName shopName,
+
+        tss.userId userId,
+        tss.shopNo shopNo,
+        tss.mobile shopUserPhone from (
+        select tsti.tradeId tradeId,tsti.shopId shopId,
+        tsti.goodId goodId,
+        tsti.goodName goodName,
+        tsti.buyNum buyNum,
+        tsti.buyUserId buyUserId,
+        tst.createTime createTime,
+        tst.interiorNo interiorNo,
+        tst.currentTime currentTime,
+        tst.recvName recvName,
+        tst.detailAddress detailAddress,
+        tst.recvMobile recvMobile,
+        tst.status status,
+        tst.tradeNo tradeNo
+        from tb_shop_trade_item tsti INNER JOIN tb_shop_trade tst
+        where tsti.tradeId = tst.id and tst.currentTime in (
+
+        SELECT t1.currentTime
+        FROM (
+        SELECT COUNT(*) AS num, s.currentTime
+        FROM (
+        SELECT *
+        FROM tb_shop_trade
+        WHERE currentTime IN (
+        SELECT currentTime
+        FROM tb_shop_trade
+        WHERE status = 3
+        GROUP BY currentTime
+        )
+        ) s
+        GROUP BY s.currentTime
+        ) t1
+        INNER JOIN (
+        SELECT s1.*
+        FROM (
+        SELECT COUNT(*) AS num1, currentTime
+        FROM tb_shop_trade
+        GROUP BY currentTime
+        ) s1
+        ) s2
+        WHERE s2.num1 = t1.num
+        AND t1.currentTime = s2.currentTime
+        )
+        ) s INNER JOIN tb_shop_shop tss where tss.id=s.shopId
+        )s inner JOIN tb_user tbs where tbs.id = s.userId
+
+
+        <if test="interiorNo !=null and interiorNo != ''">
+            and  s.interiorNo =#{interiorNo}
+        </if>
+        <if test="shopNo !=null and shopNo != ''">
+            and   s.shopNo like concat('%',#{shopNo},'%')
+        </if>
+
+        <if test="shopName !=null and shopName != ''">
+            and  s.shopName  like concat('%',#{shopName},'%')
+        </if>
+
+        <if test="shopUserName !=null and shopUserName != ''">
+            and  tbs.trueName like concat('%',#{shopUserName},'%')
+        </if>
+        <if test="shopUserPhone !=null and shopUserPhone !=''" >
+            and s.shopUserPhone = #{shopUserPhone}
+
+        </if>
+        <if test="recvName !=null and recvName != ''">
+            and  s.recvName like concat('%',#{recvName},'%')
+        </if>
+        <if test="recvMobile !=null and recvMobile != ''">
+            and  s.recvMobile like concat('%',#{recvMobile},'%')
+        </if>
+
+        <if test="goodNames != null and goodNames.size()>0">
+            AND
+            <foreach item="item" index="index" collection="goodNames" open="(" separator="or" close=")">
+                s.goodName like concat('%',#{item},'%')
+            </foreach>
+        </if>
+
+        <if test="startTime != null and startTime !=''">and s.createTime <![CDATA[ >= ]]> #{startTime}</if>
+        <if test="endTime != null and endTime !=''">and s.createTime <![CDATA[ <= ]]> #{endTime}</if>
+        order by s.createTime DESC
+        )s
+        group  by s.currentTime order by s.currentTime desc
+    </select>
+
+    <!--查询部分发货4.部分发货-->
+    <select id="getInteriorNoListPartSend" parameterType ="cn.kt.mall.management.logistics.vo.LogisticsRquestVO" resultType="cn.kt.mall.management.logistics.vo.CurrentTimeVO">
+        select s.currentTime from (
+        select s.*, tbs.trueName shopUserName from (
+        select s.*,tss.shopName shopName,
+        tss.userId userId,
+        tss.shopNo shopNo,
+        tss.mobile shopUserPhone from (
+        select tsti.tradeId tradeId,tsti.shopId shopId,
+        tsti.goodId goodId,
+        tsti.goodName goodName,
+        tsti.buyNum buyNum,
+        tsti.buyUserId buyUserId,
+        tst.createTime createTime,
+        tst.interiorNo interiorNo,
+        tst.currentTime currentTime,
+        tst.recvName recvName,
+        tst.detailAddress detailAddress,
+        tst.recvMobile recvMobile,
+        tst.status status,
+        tst.tradeNo tradeNo
+        from tb_shop_trade_item tsti INNER JOIN tb_shop_trade tst
+        where tsti.tradeId = tst.id
+        and tst.currentTime in (
+
+        select tst.currentTime from tb_shop_trade tst where tst.id in(
+
+        select tst.tradeId from tb_shop_trade_item tst where goodStatus = 0
+        )
+        GROUP BY tst.currentTime
+
+        )
+        ) s INNER JOIN tb_shop_shop tss where tss.id=s.shopId
+        )s inner JOIN tb_user tbs where tbs.id = s.userId
+
+        <if test="interiorNo !=null and interiorNo != ''">
+            and  s.interiorNo =#{interiorNo}
+        </if>
+        <if test="shopNo !=null and shopNo != ''">
+            and   s.shopNo like concat('%',#{shopNo},'%')
+        </if>
+
+        <if test="shopName !=null and shopName != ''">
+            and  tss.shopName  like concat('%',#{shopName},'%')
+        </if>
+
+        <if test="shopUserPhone !=null and shopUserPhone !=''" >
+            and s.shopUserPhone = #{shopUserPhone}
+        </if>
+
+        <if test="shopUserName !=null and shopUserName != ''">
+            and  tbs.trueName  like concat('%',#{shopUserName},'%')
+        </if>
+
+        <if test="recvName !=null and recvName != ''">
+            and  s.recvName like concat('%',#{recvName},'%')
+        </if>
+        <if test="recvMobile !=null and recvMobile != ''">
+            and  s.recvMobile like concat('%',#{recvMobile},'%')
+        </if>
+
+        <if test="goodNames != null and goodNames.size()>0">
+            AND
+            <foreach item="item" index="index" collection="goodNames" open="(" separator="or" close=")">
+                s.goodName like concat('%',#{item},'%')
+            </foreach>
+        </if>
+
+        <if test="startTime != null and startTime !=''">and s.createTime <![CDATA[ >= ]]> #{startTime}</if>
+        <if test="endTime != null and endTime !=''">and s.createTime <![CDATA[ <= ]]> #{endTime}</if>
+        order by s.createTime DESC
+        )s
+        where s.currentTime not in (
+
+        SELECT t1.currentTime
+        FROM (
+        SELECT COUNT(*) AS num, s.currentTime
+        FROM (
+        SELECT *
+        FROM tb_shop_trade
+        WHERE currentTime IN (
+        SELECT currentTime
+        FROM tb_shop_trade
+        WHERE status = 1
+        GROUP BY currentTime
+        )
+        ) s
+        GROUP BY s.currentTime
+        ) t1
+        INNER JOIN (
+        SELECT s1.*
+        FROM (
+        SELECT COUNT(*) AS num1, currentTime
+        FROM tb_shop_trade
+        GROUP BY currentTime
+        ) s1
+        ) s2
+        WHERE s2.num1 = t1.num
+        AND t1.currentTime = s2.currentTime
+
+        )
+        group  by s.currentTime order  by  s.currentTime desc
+    </select>
+
+    <select id="getLogisticsVOList" parameterType ="cn.kt.mall.management.logistics.vo.InneriornoResqVO" resultType="cn.kt.mall.management.logistics.vo.LogisticsVO">
+        select * from (
+        select s.*,tbs.trueName shopUserName from (
+        select s.*,tss.shopName shopName,
+        tss.userId userId,
+        tss.shopNo shopNo,
+        tss.mobile shopMobile,
+        tss.mobile shopUserPhone from (
+        select tsti.tradeId tradeId,tsti.shopId shopId,
+        tsti.goodId goodId,
+        tsti.goodName goodName,
+
+        tsti.buyNum buyNum,
+        tsti.buyUserId buyUserId,
+        tst.createTime createTime,
+        tst.interiorNo interiorNo,
+        tst.recvName recvName,
+        tst.currentTime currentTime,
+        tst.detailAddress detailAddress,
+        tst.recvMobile recvMobile,
+        tst.status status,
+        tst.tradeNo tradeNo,
+        tst.provinceValue provinceValue,
+        tst.cityValue cityValue,
+        tst.countyValue countyValue
+        from tb_shop_trade_item tsti INNER JOIN tb_shop_trade tst
+        where tsti.tradeId = tst.id ) s
+        INNER JOIN tb_shop_shop tss where tss.id=s.shopId
+        ) s inner  join tb_user tbs where tbs.id = s.userId
+        )
+        s where 1=1
+
+        <if test ="inneriornoList !=null and inneriornoList.size()>0">
+           and  s.interiorNo in
+            <foreach collection="inneriornoList" separator="," close=")" open="(" item="item">
+                #{item}
+            </foreach>
+        </if>
+        <if test="goodNames != null and goodNames.size()>0">
+            and
+            <foreach item="item" index="index" collection="goodNames"  separator="or" >
+
+                s.goodName like concat('%',#{item},'%')
+
+            </foreach>
+        </if>
+    </select>
+
+    <update id="updateShopTradeItem" parameterType="cn.kt.mall.management.logistics.entitys.TradeItemEntity">
+      update tb_shop_trade_item set lastTime = #{lastTime}, goodStatus= #{goodStatus},freightFree =#{freightFree}
+       where tradeId = #{tradeId} and shopId = #{shopId} and goodId = #{goodId}
+    </update>
+
+    <update id="updateShopTrade" parameterType="String">
+      update tb_shop_trade set sendStatus = #{sendStatus},status = #{status}
+       where id = #{id}
+    </update>
+
+    <select id="selectTradeGoodNum" parameterType="String" resultType="int">
+        select count(*) from tb_shop_trade_item where goodStatus = 0 and  tradeId = #{tradeId} and shopId = #{shopId}
+    </select>
+    <select id="getLogisticsVOByInteriorNo" parameterType ="String" resultType="cn.kt.mall.management.logistics.vo.LogisticsVO">
+        select * from (
+        select s.*,tbs.trueName shopUserName from (
+        select s.*,tss.shopName shopName,
+        tss.userId userId,
+        tss.shopNo shopNo,
+        tss.mobile shopMobile,
+        tss.mobile shopUserPhone from (
+        select tsti.tradeId tradeId,tsti.shopId shopId,
+        tsti.goodId goodId,
+        tsti.goodName goodName,
+        tsti.buyNum buyNum,
+        tsti.buyUserId buyUserId,
+        tst.createTime createTime,
+        tst.interiorNo interiorNo,
+        tst.recvName recvName,
+        tst.detailAddress detailAddress,
+        tst.recvMobile recvMobile,
+        tst.status status,
+        tst.tradeNo tradeNo,
+        tst.provinceValue provinceValue,
+        tst.cityValue cityValue,
+        tst.countyValue countyValue
+        from tb_shop_trade_item tsti INNER JOIN tb_shop_trade tst
+        where tsti.tradeId = tst.id ) s
+        INNER JOIN tb_shop_shop tss where tss.id=s.shopId
+        ) s inner  join tb_user tbs where tbs.id = s.userId
+        )
+        s where 1=1
+        <if  test="interiorNo != null and interiorNo !=''">
+             and s.interiorNo = #{interiorNo}
+        </if>
+        order by s.createTime DESC
+    </select>
+
+    <select id="getGoodTypeNameByGoodId" parameterType="String" resultType="cn.kt.mall.management.logistics.vo.ShopGoodInfoVO">
+          select tt.name goodType , tg.unit unit
+        from tb_shop_good tg  LEFT JOIN tb_shop_good_type tt on tg.firstGoodType = tt.id where tg.id = #{goodId}
+    </select>
+
+    <select id="getShopTradItemList" parameterType="String" resultType="cn.kt.mall.management.logistics.vo.ShopTradeItemVO">
+        select buyNum from tb_shop_trade_item where tradeId = #{tradeId} and shopId = #{shopId}
+    </select>
+
+
+
+    <select id="getTradeItemEntityList" resultType="cn.kt.mall.management.logistics.entitys.TradeItemEntity">
+        select *
+        from tb_shop_trade_item tsti
+        where tsti.tradeId =  #{tradeId}
+        and tsti.goodStatus = 0
+        <if test="goodNames !=null and goodNames != ''">
+            or
+            <foreach collection="goodNames" separator="or"  item="item">
+                tsti.goodName like concat('%',#{item},'%')
+            </foreach>
+        </if>
+        order by tsti.createTime DESC
+    </select>
+    <select id="getLogisticsExcelVOList" resultType="cn.kt.mall.management.logistics.vo.LogisticsExcelVO">
+		select tsti.`createTime`,tst.`tradeNo`,tst.`shopId`,tsti.`goodName`,tsti.`buyNum`,tst.`recvName`,tst.`detailAddress`,tst.`recvMobile`,tst.provinceValue,tst.cityValue,tst.countyValue,tss.shopNo
+        from tb_shop_trade tst
+        join `tb_shop_trade_item` tsti
+        on tst.`id` = tsti.`tradeId`
+        join `tb_shop_shop` tss
+        on tss.id = tst.shopId
+        where
+        <foreach item="item" index="index" collection="list"  separator="or" >
+            tsti.`tradeId` = #{item.tradeId}
+            and tsti.`goodId` = #{item.goodId}
+            and tst.`interiorNo` = #{item.interiorNo}
+        </foreach>
+    </select>
+
+    <select id="getCoupNameListByGoodId" parameterType="String" resultType="cn.kt.mall.management.logistics.vo.CoupNamesVO">
+
+        select tbc.couponName couponName,tgcc.goodId goodId from tb_good_coupon_center tgcc INNER JOIN tb_coupon tbc
+        where  tbc.id=tgcc.couponId and goodId = #{goodId}
+
+    </select>
+
+    <!--获取某个内部订单号的商品总数量-->
+    <select id="getGoodNumByinteriorNo" parameterType="String" resultType="int">
+        select count(*) from tb_shop_trade_item where tradeId in (
+		  select id from tb_shop_trade where interiorNo= #{interiorNo}
+          )
+    </select>
+
+    <!--获取某个内部订单号的商品未发货的数量-->
+    <select id="getNoSendGoodNumByinteriorNo" parameterType="String" resultType="int">
+        select count(*) from tb_shop_trade_item where tradeId in (
+		  select id from tb_shop_trade where interiorNo= #{interiorNo}
+          ) and goodStatus = 0
+    </select>
+
+    <select id="getShopUserBaseInfo" parameterType="String" resultType="cn.kt.mall.management.logistics.vo.ShopUserBaseInfoVO">
+        select tss.shopNo, tss.mobile, tbs.trueName  from tb_shop_shop tss INNER JOIN tb_user tbs where tss.userId = tbs.id and tss.id =#{shopId}
+    </select>
+
+    <select id="getShopTradeItemNumByShopIdAndGoodStatus" parameterType="String" resultType="int">
+        select count(*) from tb_shop_trade_item where goodStatus =1 and tradeId = #{tradeId} and shopId = #{shopId}
+
+    </select>
+    <select id="getShopTradeItemNumByShopIdAndGood" parameterType="String" resultType="int">
+        select count(*) from tb_shop_trade_item where  tradeId = #{tradeId} and shopId = #{shopId}
+
+    </select>
+
+    <!--获取某个内部订单号的商品未发货的数量-->
+    <select id="getNoSendGoodSended" parameterType="String" resultType="int">
+        select count(*) from tb_shop_trade_item where tradeId in (
+		  select id from tb_shop_trade where interiorNo= #{interiorNo}
+          ) and goodStatus = 2
+    </select>
+
+
+    <!--查询订单表所有信息-->
+    <select id="getgetShopTradItemListAll" parameterType="String" resultType="cn.kt.mall.management.logistics.vo.ShopTradeItemVO">
+       select tradeId,shopId,buyNum,goodName from tb_shop_trade_item where 1=1
+    </select>
+
+</mapper>

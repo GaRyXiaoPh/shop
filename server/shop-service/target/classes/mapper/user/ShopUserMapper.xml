@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.User.mapper.ShopUserDao">
+    <select id="getUserListByPid" parameterType="java.lang.String"
+            resultType="cn.kt.mall.shop.User.vo.UserRechargeVO">
+        SELECT
+        r.id,
+        r.username,
+        r.mobile,
+        r.createTime,
+        r.trueName as trueName,
+        r.referrer as referrer
+        FROM
+        tb_user r
+        WHERE r.pid = #{pid}
+        <if test="userName !=null and userName != ''">
+            and r.username LIKE concat('%',#{userName},'%')
+        </if>
+    </select>
+    <select id="getUserRechargeVOByReferrer" parameterType="java.lang.String"
+            resultType="cn.kt.mall.shop.User.vo.UserRechargeVO">
+        SELECT
+        c.trueName
+        FROM
+        tb_user r
+       LEFT JOIN tb_user_certification c ON r.id = c.userId
+        WHERE r.mobile= #{mobile}
+    </select>
+
+    <select id="getUserListByReferrer" parameterType="java.lang.String"
+            resultType="cn.kt.mall.shop.User.vo.UserRechargeVO">
+        SELECT
+        r.id,
+        r.username,
+        r.mobile,
+        r.createTime,
+        r.trueName as trueName
+        FROM
+        tb_user r
+        WHERE r.referrer = #{pid}
+        <if test="userName !=null and userName != ''">
+            and r.username LIKE concat('%',#{userName},'%')
+        </if>
+    </select>
+</mapper>

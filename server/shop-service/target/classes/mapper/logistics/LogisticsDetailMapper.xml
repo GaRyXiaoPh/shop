@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper
+	namespace="cn.kt.mall.shop.logistics.mapper.LogisticsDetailMapper">
+	<resultMap id="BaseResultMap"
+		type="cn.kt.mall.shop.logistics.entity.LogisticsDetail">
+		<id column="id" property="id" jdbcType="INTEGER" />
+		<result column="logistics_no" property="logisticsNo"
+			jdbcType="VARCHAR" />
+		<result column="ftime" property="ftime" jdbcType="VARCHAR" />
+		<result column="logistics_context" property="logisticsContext" />
+	</resultMap>
+
+	<sql id="Base_Column_List">
+		id,logistics_no,ftime,logistics_context
+	</sql>
+
+	<select id="selectLogisticsDetail" resultMap="BaseResultMap">
+		SELECT
+		<include refid="Base_Column_List" />
+		FROM
+		tb_logistics_detail
+		WHERE
+		logistics_no = #{logisticsNo} order by ftime desc
+	</select>
+
+	<delete id="delLogisticsDetail">
+		DELETE
+		FROM
+		tb_logistics_detail
+		WHERE
+		logistics_no =
+		#{logisticsNo}
+	</delete>
+
+	<insert id="addLogisticsDetail"
+		parameterType="cn.kt.mall.shop.logistics.entity.LogisticsDetail">
+		INSERT into tb_logistics_detail
+		<trim prefix="(" suffix=")" suffixOverrides=",">
+			<if test="logisticsNo != null"> logistics_no, </if>
+			<if test="ftime != null">ftime, </if>
+			<if test="logisticsContext != null">logistics_context, </if>
+		</trim>
+		<trim prefix="values (" suffix=")" suffixOverrides=",">
+			<if test="logisticsNo != null">#{logisticsNo},</if>
+			<if test="ftime != null">#{ftime},</if>
+			<if test="logisticsContext != null">#{logisticsContext},</if>
+		</trim>
+	</insert>
+	
+	<select id="selectOne" resultMap="BaseResultMap">
+		SELECT
+		<include refid="Base_Column_List" />
+		FROM
+		tb_logistics_detail
+		where logistics_no = #{logisticsNo} and ftime = #{ftime} and logistics_context = #{logisticsContext}
+	</select>
+
+</mapper>

@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="cn.kt.mall.shop.good.mapper.GoodPropertyDAO">
+
+    <cache type="cn.kt.mall.common.cache.MybatisRedisCache"/>
+    <select id="getGoodTypeById" parameterType="string" resultType="cn.kt.mall.shop.good.entity.GoodTypeEntity">
+        SELECT * FROM tb_shop_good_type WHERE id=#{id}
+    </select>
+
+    <select id="getGoodType" parameterType="string" resultType="cn.kt.mall.shop.good.entity.GoodTypeEntity" >
+        SELECT * FROM tb_shop_good_type WHERE parentId=#{parentId}
+    </select>
+
+    <insert id="addGoodType" parameterType="cn.kt.mall.shop.good.entity.GoodTypeEntity" flushCache="true">
+    	insert into tb_shop_good_type
+		(id,name,img,sort,parentId) values 
+		(#{id},#{name},#{img},#{sort},#{parentId})
+    </insert>
+
+    <delete id="delGoodType" parameterType="string" flushCache="true">
+    	delete from tb_shop_good_type where id = #{id}
+    </delete>
+
+    <update id="updateGoodType" parameterType="cn.kt.mall.shop.good.entity.GoodTypeEntity" flushCache="true">
+        update tb_shop_good_type
+        <set>
+            <if test="name != null and name != ''">name = #{name},</if>
+            <if test="img != null and img != ''">img = #{img},</if>
+            <if test="parentId != null and parentId != ''">parentId = #{parentId},</if>
+            <if test="sort != null">sort = #{sort},</if>
+        </set>
+        where id = #{id}
+    </update>
+
+    <select id="listAllType" resultType="cn.kt.mall.shop.good.entity.GoodTypeEntity">
+        SELECT * from tb_shop_good_type order by sort
+    </select>
+
+    <select id="listByIds" parameterType="list" resultType="cn.kt.mall.shop.good.entity.GoodTypeEntity">
+        SELECT * from tb_shop_good_type where id in
+        <foreach collection="ids" item="id" separator="," open="(" close=")" index="index">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getGoodProperty" parameterType="string" resultType="cn.kt.mall.shop.good.entity.GoodPropertyEntity">
+        SELECT * FROM tb_shop_good_property WHERE goodId=#{goodId}
+    </select>
+
+    <select id="getGoodImg" parameterType="string" resultType="cn.kt.mall.shop.good.entity.GoodImgEntity">
+        SELECT * FROM  tb_shop_good_img WHERE goodId=#{goodId} order by createTime ASC
+    </select>
+
+    <insert id="addGoodImg" parameterType="cn.kt.mall.shop.good.entity.GoodImgEntity">
+        insert into tb_shop_good_img(id, goodId, img, type) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id}, #{item.goodId}, #{item.img}, #{item.type})
+        </foreach>
+    </insert>
+
+    <delete id="delGoodImg" parameterType="string">
+        DELETE FROM tb_shop_good_img WHERE goodId=#{goodId}
+    </delete>
+
+    <insert id="addGoodProperty" parameterType="cn.kt.mall.shop.good.entity.GoodPropertyEntity">
+        insert into tb_shop_good_property(id, goodId, propertyName, propertyValue) values
+        <foreach collection="list" item="item" separator=",">
+            (#{item.id}, #{item.goodId}, #{item.propertyName}, #{item.propertyValue})
+        </foreach>
+    </insert>
+
+    <delete id="delGoodProperty" parameterType="string">
+        DELETE FROM tb_shop_good_property WHERE goodId=#{goodId}
+    </delete>
+
+
+    <insert id="addGoodImgs" parameterType="cn.kt.mall.shop.good.entity.GoodImgEntity">
+        insert into tb_shop_good_img(id, goodId, img, type) values
+            (#{id}, #{goodId}, #{img}, #{type})
+    </insert>
+
+</mapper>
